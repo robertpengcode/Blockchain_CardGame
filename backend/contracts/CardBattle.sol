@@ -14,8 +14,8 @@ contract CardBattle is ERC1155, Ownable {
     uint256 public constant Bob = 5;
     uint256 public constant Sophie = 6;
     uint256 public constant Steve = 7;
-    uint256 public constant MagicSword = 8;
-    uint256 public constant MagicShield = 9;
+    uint256 public constant Berserk = 8;
+    uint256 public constant ForceShield = 9;
 
     uint256 public constant characterPrice = 0.001 ether;
     uint256 public constant treasurePrice = 0.0002 ether;
@@ -23,8 +23,6 @@ contract CardBattle is ERC1155, Ownable {
     uint256 public constant winnerPrize = 0.0018 ether;
     //battleId starts from 1
     uint256 private lastBattleId = 1;
-    //playerId starts from 1
-    uint256 private lastPlayerId = 1;
 
     struct Token {
         string name;
@@ -34,7 +32,6 @@ contract CardBattle is ERC1155, Ownable {
 
     struct Player {
         string name;
-        uint256 playerId;
         address playerAddr;
         uint256 battleTimes;
         uint8 health;
@@ -43,29 +40,30 @@ contract CardBattle is ERC1155, Ownable {
         uint256[3] battleTokens;
         uint8 battleAttack;
         uint8 battleDefense;
+        uint8 battleMoveId;
     }
 
     struct Battle {
         Player[2] playersInBattle;
         address winner;
-    }
-
-    struct Move {
-        Player player;
-        Choice choice;
+        BattleStatus battleStatus;
+        Choice[2] moves;
     }
 
     enum BattleStatus {
         PENDING,
-        START,
-        END
+        STARTED,
+        ENDED
     }
 
     enum Choice {
+        NO,
         ATTACK,
         DEFENSE
     }
 
+    //battles waiting for player to join
+    uint256[] private waitingBattleIds;
     //user address to a Player struct
     mapping(address => Player) private players;
     //user address to tokenId to owned amount
@@ -77,7 +75,9 @@ contract CardBattle is ERC1155, Ownable {
     //user address to ether balance
     mapping(address => uint256) private playerBalances;
 
-    event RegisteredPlayer(string name, uint256 indexed playerId, address indexed playerAddr, uint256 time);
+    event RegisteredPlayer(string name, address indexed playerAddr, uint256 time);
+    event StartedBattle(uint256 indexed battleId, address indexed player1, address indexed player2, uint256 time);
+    event EndedBattle(uint256 indexed battleId, address indexed winner, uint256 time);
 
     error CardBattle__IsPlayerAlready();
     error CardBattle__NotPlayer();
@@ -85,22 +85,25 @@ contract CardBattle is ERC1155, Ownable {
     error CardBattle__NeedToBuyBattles();
     error CardBattle__OwnNoCharacter();
     error CardBattle__OwnNoSuchTreasure();
+    error CardBattle__NeedToJoinBattles();
+    error CardBattle__NeedToInitiateBattle();
+    error CardBattle__StatusNotCorrect();
 
     modifier isNotPlayer() {
-        if(players[msg.sender].playerId != 0) {
+        if(players[msg.sender].playerAddr != address(0)) {
             revert CardBattle__IsPlayerAlready();
         }
         _;
     }
 
     modifier playerOnly() {
-        if(players[msg.sender].playerId == 0) {
+        if(players[msg.sender].playerAddr == address(0)) {
             revert CardBattle__NotPlayer();
         }
         _;
     }
-//[["empty", 0, 0],["Jeff", 8, 2],["Charlie", 7, 3],["Henley", 6, 4],["Jack", 5, 5],["Bob", 4, 6],["Sophie", 3, 7],["Steve", 2, 8],["MagicSword", 1, 0],["MagicShield", 0, 1]]
-    constructor(Token[] memory tokensArr) ERC1155("") {
+//[["empty", 0, 0],["Jeff", 8, 2],["Charlie", 7, 3],["Henley", 7, 3],["Jack", 6, 4],["Bob", 6, 4],["Sophie", 5, 5],["Steve", 5, 5],["Berserk", 1, 0],["ForceShield", 0, 1]]
+    constructor(Token[] memory tokensArr) ERC1155("https://github.com/robertpengcode/Blockchain_CardGame/tree/main/backend/metadata/{id}.json") {
         _setUpTokens(tokensArr);
     }
 
@@ -113,14 +116,11 @@ contract CardBattle is ERC1155, Ownable {
     }
 
     function registerPlayer(string calldata name) external isNotPlayer{
-        uint256 playerId = lastPlayerId;
-        lastPlayerId++;
         players[msg.sender].name = name;
-        players[msg.sender].playerId = playerId;
         players[msg.sender].playerAddr = msg.sender;
         players[msg.sender].health = 10;
         players[msg.sender].energy = 10;
-        emit RegisteredPlayer(name, playerId, msg.sender, block.timestamp);
+        emit RegisteredPlayer(name, msg.sender, block.timestamp);
     }
 
     function mintCharacter() external payable playerOnly{
@@ -152,27 +152,38 @@ contract CardBattle is ERC1155, Ownable {
         players[msg.sender].battleTokens[0] = characterId;
     }
 
-    function useTreasure1(uint256 treasureId1) external playerOnly{
-        if (ownedTokens[msg.sender][treasureId1] <= 0){
+    function useMagicSword() external playerOnly{
+        if (ownedTokens[msg.sender][Berserk] <= 0){
             revert CardBattle__OwnNoSuchTreasure();
         } 
-        ownedTokens[msg.sender][treasureId1]--;
-        _burn(msg.sender, treasureId1, 1);
-        players[msg.sender].battleTokens[1] = treasureId1;
+        ownedTokens[msg.sender][Berserk]--;
+        _burn(msg.sender, Berserk, 1);
+        players[msg.sender].battleTokens[1] = Berserk;
     }
 
-     function useTreasure2(uint256 treasureId2) external playerOnly{
-        if (ownedTokens[msg.sender][treasureId2] <= 0){
+     function useMagicShield() external playerOnly{
+        if (ownedTokens[msg.sender][ForceShield] <= 0){
             revert CardBattle__OwnNoSuchTreasure();
         } 
-        ownedTokens[msg.sender][treasureId2]--;
-        _burn(msg.sender, treasureId2, 1);
-        players[msg.sender].battleTokens[2] = treasureId2;
+        ownedTokens[msg.sender][ForceShield]--;
+        _burn(msg.sender, ForceShield, 1);
+        players[msg.sender].battleTokens[2] = ForceShield;
     }
 
-    function initiateBattle() external payable playerOnly{
+    function playGame() external playerOnly{
+        if (waitingBattleIds.length == 0) {
+            _initiateBattle();
+        } else {
+            _joinBattle();
+        }
+    }
+
+    function _initiateBattle() internal playerOnly{
         if (players[msg.sender].battleTimes <= 0) {
             revert CardBattle__NeedToBuyBattles();
+        }
+        if (waitingBattleIds.length != 0) {
+            revert CardBattle__NeedToJoinBattles();
         }
         players[msg.sender].battleTimes--;
         uint256 characterId = players[msg.sender].battleTokens[0];
@@ -180,21 +191,141 @@ contract CardBattle is ERC1155, Ownable {
         uint256 treasureId2 = players[msg.sender].battleTokens[2];
         players[msg.sender].battleAttack = tokens[characterId].attack + tokens[treasureId1].attack;
         players[msg.sender].battleDefense = tokens[characterId].defense + tokens[treasureId2].defense;
+        players[msg.sender].battleMoveId = 0;
         uint256 battleId = lastBattleId;
         lastBattleId++;
         battles[battleId].playersInBattle[0] = players[msg.sender];
+        waitingBattleIds.push(battleId);
     }
 
-    function joinBattle(uint256 battleId) external playerOnly{
+    function _joinBattle() internal playerOnly{
         if (players[msg.sender].battleTimes <= 0) {
             revert CardBattle__NeedToBuyBattles();
         }
+        if (waitingBattleIds.length == 0) {
+            revert CardBattle__NeedToInitiateBattle();
+        }
+        uint256 battleId = waitingBattleIds[0];
+        address player1 = battles[battleId].playersInBattle[0].playerAddr;
+        delete waitingBattleIds;
         players[msg.sender].battleTimes--;
+        uint256 characterId = players[msg.sender].battleTokens[0];
+        uint256 treasureId1 = players[msg.sender].battleTokens[1];
+        uint256 treasureId2 = players[msg.sender].battleTokens[2];
+        players[msg.sender].battleAttack = tokens[characterId].attack + tokens[treasureId1].attack;
+        players[msg.sender].battleDefense = tokens[characterId].defense + tokens[treasureId2].defense;
+        players[msg.sender].battleMoveId = 1;
         battles[battleId].playersInBattle[1] = players[msg.sender];
+        battles[battleId].battleStatus = BattleStatus.STARTED;
+        emit StartedBattle(battleId, player1, msg.sender, block.timestamp);
     }
 
     function makeMove(uint256 battleId, Choice choice) external playerOnly{
+        if (battles[battleId].battleStatus != BattleStatus.STARTED) {
+            revert CardBattle__StatusNotCorrect();
+        }
+        uint8 battleMoveId = players[msg.sender].battleMoveId;
+        battles[battleId].moves[battleMoveId] = choice;
+        if (battles[battleId].moves[0] != Choice.NO && battles[battleId].moves[1] != Choice.NO) {
+            _updateGame(battleId);
+        }
+    }
 
+    function _updateGame(uint256 battleId) internal {
+        Player memory player1 = battles[battleId].playersInBattle[0];
+        Player memory player2 = battles[battleId].playersInBattle[1];
+        Choice move1 = battles[battleId].moves[0]; 
+        Choice move2 = battles[battleId].moves[1]; 
+        if (move1 == Choice.ATTACK && move2 == Choice.ATTACK) {
+            player1.health = player1.health - player2.battleAttack;
+            player2.health = player2.health - player1.battleAttack;
+            if (player1.health > 0 && player2.health <= 0) {
+                battles[battleId].winner = player1.playerAddr;
+                _endBattle(battleId);
+            } else if (player1.health <= 0 && player2.health > 0) {
+                battles[battleId].winner = player2.playerAddr;
+                _endBattle(battleId);
+            } else if (player1.health <= 0 && player2.health <= 0) {
+                _endBattle(battleId);
+            }
+            player1.energy -= 2;
+            player2.energy -= 2;
+            if (player1.energy == 0) {
+                if (player1.health > player2.health) {
+                    battles[battleId].winner = player1.playerAddr;
+                    _endBattle(battleId);
+                } else if (player1.health < player2.health) {
+                    battles[battleId].winner = player2.playerAddr;
+                    _endBattle(battleId);
+                }
+                _endBattle(battleId);
+            }
+        } else if(move1 == Choice.ATTACK && move2 == Choice.DEFENSE) {
+            player2.health = player2.health - player1.battleAttack + player2.battleDefense;
+            if (player1.health > 0 && player2.health <= 0) {
+                battles[battleId].winner = player1.playerAddr;
+                _endBattle(battleId);
+            } else if (player1.health <= 0 && player2.health > 0) {
+                battles[battleId].winner = player2.playerAddr;
+                _endBattle(battleId);
+            } else if (player1.health <= 0 && player2.health <= 0) {
+                _endBattle(battleId);
+            }
+            player1.energy -= 2;
+            player2.energy -= 2;
+            if (player1.energy == 0) {
+                if (player1.health > player2.health) {
+                    battles[battleId].winner = player1.playerAddr;
+                    _endBattle(battleId);
+                } else if (player1.health < player2.health) {
+                    battles[battleId].winner = player2.playerAddr;
+                    _endBattle(battleId);
+                }
+                _endBattle(battleId);
+            }
+        } else if(move1 == Choice.DEFENSE && move2 == Choice.ATTACK) {
+            player1.health = player1.health - player2.battleAttack + player1.battleDefense;
+            if (player1.health > 0 && player2.health <= 0) {
+                battles[battleId].winner = player1.playerAddr;
+                _endBattle(battleId);
+            } else if (player1.health <= 0 && player2.health > 0) {
+                battles[battleId].winner = player2.playerAddr;
+                _endBattle(battleId);
+            } else if (player1.health <= 0 && player2.health <= 0) {
+                _endBattle(battleId);
+            }
+            player1.energy -= 2;
+            player2.energy -= 2;
+            if (player1.energy == 0) {
+                if (player1.health > player2.health) {
+                    battles[battleId].winner = player1.playerAddr;
+                    _endBattle(battleId);
+                } else if (player1.health < player2.health) {
+                    battles[battleId].winner = player2.playerAddr;
+                    _endBattle(battleId);
+                }
+                _endBattle(battleId);
+            }
+        } else if(move1 == Choice.DEFENSE && move2 == Choice.DEFENSE) {
+            player1.energy -= 2;
+            player2.energy -= 2;
+            if (player1.energy == 0) {
+                if (player1.health > player2.health) {
+                    battles[battleId].winner = player1.playerAddr;
+                    _endBattle(battleId);
+                } else if (player1.health < player2.health) {
+                    battles[battleId].winner = player2.playerAddr;
+                    _endBattle(battleId);
+                }
+                _endBattle(battleId);
+            }
+        }
+    }
+
+    function _endBattle(uint256 battleId) internal {
+        address winner = battles[battleId].winner;
+        battles[battleId].battleStatus = BattleStatus.ENDED;
+        emit EndedBattle(battleId, winner, block.timestamp);
     }
 
     function mint(address account, uint256 id, uint256 amount, bytes memory data)
@@ -224,4 +355,11 @@ contract CardBattle is ERC1155, Ownable {
         return battles[battleId];
     }
 
+    function getBattleStatus(uint256 battleId) public view returns (BattleStatus) {
+        return battles[battleId].battleStatus;
+    }
+
+    function getWaitingBattle() public view returns (uint256[] memory) {
+        return waitingBattleIds;
+    }
 }
