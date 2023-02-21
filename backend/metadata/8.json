@@ -1,0 +1,14 @@
+{
+    "description": "A treasure that be used in the battle.", 
+    "external_url": "https://github.com/robertpengcode/Blockchain_CardGame", 
+    "image": "ipfs://QmUQJfjSRjWzTYFFGv9o9coFyikad15MTcY8vtSAnLsyeY", 
+    "name": "Berserk",
+    "attributes": [ {
+      "trait_type": "Attack", 
+      "value": 1
+    }, 
+    {
+      "trait_type": "Defense", 
+      "value": 0
+    } ]
+}

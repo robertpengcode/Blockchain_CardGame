@@ -1,14 +1,14 @@
 {
     "description": "Friendly Murong Family Character that battles in Kingdom of Yan.", 
     "external_url": "https://github.com/robertpengcode/Blockchain_CardGame", 
-    "image": "ipfs://QmW3u2g1AqBvXKMtkMZWqAReqZYNn9PjwHMSjYw6dodMop", 
-    "name": "Charlie",
+    "image": "ipfs://QmP9iAKt1zQqbdDFSuiCaJEcFQ1HBWPKq1F2G526G2kxbE", 
+    "name": "Bob",
     "attributes": [ {
       "trait_type": "Attack", 
-      "value": 7
+      "value": 6
     }, 
     {
       "trait_type": "Defense", 
-      "value": 3
+      "value": 4
     } ]
 }
