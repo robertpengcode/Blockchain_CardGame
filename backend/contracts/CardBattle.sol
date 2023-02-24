@@ -81,7 +81,7 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
     event InitiatedBattle(address indexed player, uint256 indexed battleId, uint256 time);
     event StartedBattle(uint256 indexed battleId, address indexed player1, address indexed player2, uint256 time);
     event MadeMove(uint256 indexed battleId, address indexed player, Choice choice);
-    event UpdatedGame(uint256 indexed battleId);
+    event UpdatedGame(uint256 indexed battleId, address player1, address player2, uint256 time);
     event EndedBattle(uint256 indexed battleId, address indexed winner, uint256 time);
     event WithdrewByOwner(address owner, uint256 balance, uint256 time);
 
@@ -301,70 +301,70 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
             player2.health = player2.health - player1.battleAttack;
             if (player1.health > 0 && player2.health <= 0) {
                 battles[battleId].winner = player1.playerAddr;
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             } else if (player1.health <= 0 && player2.health > 0) {
                 battles[battleId].winner = player2.playerAddr;
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             } else if (player1.health <= 0 && player2.health <= 0) {
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             }
             player1.energy -= 2;
             player2.energy -= 2;
             if (player1.energy == 0) {
                 if (player1.health > player2.health) {
                     battles[battleId].winner = player1.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 } else if (player1.health < player2.health) {
                     battles[battleId].winner = player2.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 }
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             }
         } else if(move1 == Choice.ATTACK && move2 == Choice.DEFENSE) {
             player2.health = player2.health - player1.battleAttack + player2.battleDefense;
             if (player1.health > 0 && player2.health <= 0) {
                 battles[battleId].winner = player1.playerAddr;
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             } else if (player1.health <= 0 && player2.health > 0) {
                 battles[battleId].winner = player2.playerAddr;
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             } else if (player1.health <= 0 && player2.health <= 0) {
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             }
             player1.energy -= 2;
             player2.energy -= 2;
             if (player1.energy == 0) {
                 if (player1.health > player2.health) {
                     battles[battleId].winner = player1.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 } else if (player1.health < player2.health) {
                     battles[battleId].winner = player2.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 }
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             }
         } else if(move1 == Choice.DEFENSE && move2 == Choice.ATTACK) {
             player1.health = player1.health - player2.battleAttack + player1.battleDefense;
             if (player1.health > 0 && player2.health <= 0) {
                 battles[battleId].winner = player1.playerAddr;
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             } else if (player1.health <= 0 && player2.health > 0) {
                 battles[battleId].winner = player2.playerAddr;
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             } else if (player1.health <= 0 && player2.health <= 0) {
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             }
             player1.energy -= 2;
             player2.energy -= 2;
             if (player1.energy == 0) {
                 if (player1.health > player2.health) {
                     battles[battleId].winner = player1.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 } else if (player1.health < player2.health) {
                     battles[battleId].winner = player2.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 }
-                _endBattle(battleId);
+               _endBattle(battleId, player1Addr, player2Addr);
             }
         } else if(move1 == Choice.DEFENSE && move2 == Choice.DEFENSE) {
             player1.energy -= 2;
@@ -372,22 +372,19 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
             if (player1.energy == 0) {
                 if (player1.health > player2.health) {
                     battles[battleId].winner = player1.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 } else if (player1.health < player2.health) {
                     battles[battleId].winner = player2.playerAddr;
-                    _endBattle(battleId);
+                    _endBattle(battleId, player1Addr, player2Addr);
                 }
-                _endBattle(battleId);
+                _endBattle(battleId, player1Addr, player2Addr);
             }
         }
-        emit UpdatedGame(battleId);
+        emit UpdatedGame(battleId, player1Addr, player1Addr, block.timestamp);
     }
 
-    function _endBattle(uint256 battleId) internal {
+    function _endBattle(uint256 battleId, address player1Addr, address player2Addr) internal {
         address winner = battles[battleId].winner;
-
-        address player1Addr = battles[battleId].playerAddrs[0];
-        address player2Addr = battles[battleId].playerAddrs[1];
         Player storage player1 = players[player1Addr];
         Player storage player2 = players[player2Addr];
 

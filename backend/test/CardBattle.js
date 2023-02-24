@@ -428,61 +428,83 @@ const { developmentChains } = require("../helper-hardhat-config");
         it("Should update players' data - moves: [1,1]", async () => {
           const player_1 = await cardBattle.getPlayer(player1.address);
           const player_2 = await cardBattle.getPlayer(player2.address);
-          const player_1_health_before = player_1.health;
-          const player_2_health_before = player_2.health;
-          console.log("aa", player_1_health_before);
-          console.log("bb", player_2_health_before);
           expect(player_1.health).to.equal(10 - player_2.battleAttack);
           expect(player_2.health).to.equal(10 - player_1.battleAttack);
         });
 
         //test moves [1,2]
-        // it("Should update players' data - moves: [1,2]", async () => {
-        //   let player_1 = await cardBattle.getPlayer(player1.address);
-        //   let player_2 = await cardBattle.getPlayer(player2.address);
-        //   const player_1_health_before = player_1.health;
-        //   const player_2_health_before = player_2.health;
-        //   await cardBattle.connect(player1).makeMove(1, 1);
-        //   await cardBattle.connect(player2).makeMove(1, 2);
-        //   player_1 = await cardBattle.getPlayer(player1.address);
-        //   player_2 = await cardBattle.getPlayer(player2.address);
-        //   const player_1_health_after = player_1.health;
-        //   const player_2_health_after = player_2.health;
-        //   console.log("aa", player_1_health_before);
-        //   console.log("bb", player_2_health_before);
-        //   console.log("cc", player_1_health_after);
-        //   console.log("dd", player_2_health_after);
-        //   expect(player_1.health).to.equal(player_1_health_before);
-        //   expect(player_2.health).to.equal(
-        //     player_2_health_before -
-        //       player_1.battleAttack +
-        //       player_2.battleDefense
-        //   );
-        // });
+        it("Should update players' data - moves: [1,2]", async () => {
+          let player_1 = await cardBattle.getPlayer(player1.address);
+          let player_2 = await cardBattle.getPlayer(player2.address);
+          const player_1_health_before = player_1.health;
+          const player_2_health_before = player_2.health;
+          const player_1_energy_before = player_1.energy;
+          const player_2_energy_before = player_2.energy;
+          await cardBattle.connect(player1).makeMove(1, 1);
+          await cardBattle.connect(player2).makeMove(1, 2);
+          player_1 = await cardBattle.getPlayer(player1.address);
+          player_2 = await cardBattle.getPlayer(player2.address);
+          const player_1_health_after = player_1.health;
+          const player_2_health_after = player_2.health;
+          console.log("P1_Before", player_1_health_before);
+          console.log("P2_Before", player_2_health_before);
+          console.log("P1_After", player_1_health_after);
+          console.log("P2_After", player_2_health_after);
+          expect(player_1.health).to.equal(player_1_health_before);
+          expect(player_2.health).to.equal(
+            player_2_health_before -
+              player_1.battleAttack +
+              player_2.battleDefense
+          );
+          expect(player_1.energy).to.equal(player_1_energy_before - 2);
+          expect(player_2.energy).to.equal(player_2_energy_before - 2);
+          const winner = (await cardBattle.getBattle(1)).winner;
+          console.log("winner", winner);
+          if (player_1.health > 0 && player_2.health <= 0) {
+            expect(winner).to.equal(player1.address);
+          } else if (player_1.health <= 0 && player_2.health > 0) {
+            expect(winner).to.equal(player2.address);
+          } else if (player_1.health <= 0 && player_2.health <= 0) {
+            expect(winner).slice(0, 7).to.equal(0x00000);
+          }
+        });
 
         //test move [2,1]
-        // it("Should update players' data - moves: [2,1]", async () => {
-        //   let player_1 = await cardBattle.getPlayer(player1.address);
-        //   let player_2 = await cardBattle.getPlayer(player2.address);
-        //   const player_1_health_before = player_1.health;
-        //   const player_2_health_before = player_2.health;
-        //   await cardBattle.connect(player1).makeMove(1, 2);
-        //   await cardBattle.connect(player2).makeMove(1, 1);
-        //   player_1 = await cardBattle.getPlayer(player1.address);
-        //   player_2 = await cardBattle.getPlayer(player2.address);
-        //   const player_1_health_after = player_1.health;
-        //   const player_2_health_after = player_2.health;
-        //   console.log("aa", player_1_health_before);
-        //   console.log("bb", player_2_health_before);
-        //   console.log("cc", player_1_health_after);
-        //   console.log("dd", player_2_health_after);
-        //   expect(player_1.health).to.equal(
-        //     player_1_health_before -
-        //       player_2.battleAttack +
-        //       player_1.battleDefense
-        //   );
-        //   expect(player_2.health).to.equal(player_2_health_before);
-        // });
+        it("Should update players' data - moves: [2,1]", async () => {
+          let player_1 = await cardBattle.getPlayer(player1.address);
+          let player_2 = await cardBattle.getPlayer(player2.address);
+          const player_1_health_before = player_1.health;
+          const player_2_health_before = player_2.health;
+          const player_1_energy_before = player_1.energy;
+          const player_2_energy_before = player_2.energy;
+          await cardBattle.connect(player1).makeMove(1, 2);
+          await cardBattle.connect(player2).makeMove(1, 1);
+          player_1 = await cardBattle.getPlayer(player1.address);
+          player_2 = await cardBattle.getPlayer(player2.address);
+          const player_1_health_after = player_1.health;
+          const player_2_health_after = player_2.health;
+          console.log("P1_Before", player_1_health_before);
+          console.log("P2_Before", player_2_health_before);
+          console.log("P1_After", player_1_health_after);
+          console.log("P2_After", player_2_health_after);
+          expect(player_1.health).to.equal(
+            player_1_health_before -
+              player_2.battleAttack +
+              player_1.battleDefense
+          );
+          expect(player_2.health).to.equal(player_2_health_before);
+          expect(player_1.energy).to.equal(player_1_energy_before - 2);
+          expect(player_2.energy).to.equal(player_2_energy_before - 2);
+          const winner = (await cardBattle.getBattle(1)).winner;
+          console.log("winner", winner);
+          if (player_1.health > 0 && player_2.health <= 0) {
+            expect(winner).to.equal(player1.address);
+          } else if (player_1.health <= 0 && player_2.health > 0) {
+            expect(winner).to.equal(player2.address);
+          } else if (player_1.health <= 0 && player_2.health <= 0) {
+            expect(winner).slice(0, 7).to.equal(0x00000);
+          }
+        });
 
         //test move [2,2]
         it("Should update players' data - moves: [2,2]", async () => {
@@ -490,18 +512,31 @@ const { developmentChains } = require("../helper-hardhat-config");
           let player_2 = await cardBattle.getPlayer(player2.address);
           const player_1_health_before = player_1.health;
           const player_2_health_before = player_2.health;
+          const player_1_energy_before = player_1.energy;
+          const player_2_energy_before = player_2.energy;
           await cardBattle.connect(player1).makeMove(1, 2);
           await cardBattle.connect(player2).makeMove(1, 2);
           player_1 = await cardBattle.getPlayer(player1.address);
           player_2 = await cardBattle.getPlayer(player2.address);
           const player_1_health_after = player_1.health;
           const player_2_health_after = player_2.health;
-          console.log("aa", player_1_health_before);
-          console.log("bb", player_2_health_before);
-          console.log("cc", player_1_health_after);
-          console.log("dd", player_2_health_after);
+          console.log("P1_Before", player_1_health_before);
+          console.log("P2_Before", player_2_health_before);
+          console.log("P1_After", player_1_health_after);
+          console.log("P2_After", player_2_health_after);
           expect(player_1.health).to.equal(player_1_health_before);
           expect(player_2.health).to.equal(player_2_health_before);
+          expect(player_1.energy).to.equal(player_1_energy_before - 2);
+          expect(player_2.energy).to.equal(player_2_energy_before - 2);
+          const winner = (await cardBattle.getBattle(1)).winner;
+          console.log("winner", winner);
+          if (player_1.health > 0 && player_2.health <= 0) {
+            expect(winner).to.equal(player1.address);
+          } else if (player_1.health <= 0 && player_2.health > 0) {
+            expect(winner).to.equal(player2.address);
+          } else if (player_1.health <= 0 && player_2.health <= 0) {
+            expect(winner).slice(0, 7).to.equal(0x00000);
+          }
         });
       });
     });
