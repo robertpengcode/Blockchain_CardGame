@@ -5,12 +5,20 @@ const { developmentChains } = require("../helper-hardhat-config");
 !developmentChains.includes(network.name)
   ? describe.skip
   : describe("CardBattle", function () {
-      let owner, player1, player2, player3, cardBattle, gameTokens;
+      let owner,
+        player1,
+        player2,
+        player3,
+        player4,
+        cardBattle,
+        gameTokens,
+        player1_characterId,
+        player2_characterId,
+        player3_characterId;
       const characterPrice = ethers.utils.parseEther("0.001");
       const treasurePrice = ethers.utils.parseEther("0.0002");
-      let player1_characterId, player2_characterId;
       before(async () => {
-        [owner, player1, player2, player3] = await ethers.getSigners();
+        [owner, player1, player2, player3, player4] = await ethers.getSigners();
 
         const GameTokens = await ethers.getContractFactory("GameTokens");
         gameTokens = await GameTokens.deploy();
@@ -180,7 +188,6 @@ const { developmentChains } = require("../helper-hardhat-config");
       });
 
       describe("Pick Character", function () {
-        //let tokenId;
         let anotherId;
         before(async () => {
           anotherId =
@@ -215,6 +222,12 @@ const { developmentChains } = require("../helper-hardhat-config");
           expect(
             (await cardBattle.getPlayer(player1.address)).battleTokens[0]
           ).to.be.equal(player1_characterId);
+        });
+
+        it("Should pick character (player2) - event PickedCharacter", async () => {
+          await expect(
+            cardBattle.connect(player2).pickCharacter(player2_characterId)
+          ).to.emit(cardBattle, "PickedCharacter");
         });
       });
 
@@ -299,12 +312,26 @@ const { developmentChains } = require("../helper-hardhat-config");
             "InitiatedBattle"
           );
         });
+        it("Should set up battleId & nextBattleId", async () => {
+          expect(await cardBattle.getNextBattleId()).to.equal(2);
+        });
+        it("Should set up waitingBattleId", async () => {
+          expect(await cardBattle.getWaitingBattleId()).to.equal(1);
+        });
+        it("Should set up player1's attack", async () => {
+          //Berserk: +1
+          const player1_attack =
+            (await cardBattle.getToken(player1_characterId)).attack + 1;
+          expect(
+            (await cardBattle.getPlayer(player1.address)).battleAttack
+          ).to.equal(player1_attack);
+        });
         it("Should not play - in game already", async () => {
           await expect(
             cardBattle.connect(player1).playGame()
           ).to.be.revertedWithCustomError(
             cardBattle,
-            "CardBattle__InGameAlready"
+            "CardBattle__InBattleAlready"
           );
         });
         it("Should play (join battle) - event StartedBattle", async () => {
@@ -312,6 +339,28 @@ const { developmentChains } = require("../helper-hardhat-config");
             cardBattle,
             "StartedBattle"
           );
+        });
+        it("Should set up player2's defense", async () => {
+          //ForceShield: +1
+          const player2_defense =
+            (await cardBattle.getToken(player2_characterId)).defense + 1;
+          expect(
+            (await cardBattle.getPlayer(player2.address)).battleDefense
+          ).to.equal(player2_defense);
+        });
+        it("Should set up players in the battle", async () => {
+          expect((await cardBattle.getBattle(1)).playerAddrs[0]).to.equal(
+            player1.address
+          );
+          expect((await cardBattle.getBattle(1)).playerAddrs[1]).to.equal(
+            player2.address
+          );
+        });
+        it("Should update battle status", async () => {
+          expect(await cardBattle.getBattleStatus(1)).to.equal(1);
+        });
+        it("Should reset waitingBattleId", async () => {
+          expect(await cardBattle.getWaitingBattleId()).to.equal(0);
         });
         it("Should not play (initiate battle) - Require Character To Play", async () => {
           await cardBattle.connect(player3).registerPlayer();
@@ -321,6 +370,138 @@ const { developmentChains } = require("../helper-hardhat-config");
             cardBattle,
             "CardBattle__RequireCharacterToPlay"
           );
+        });
+      });
+
+      describe("Make move", () => {
+        it("Should not make move - not player", async () => {
+          await expect(
+            cardBattle.connect(player4).makeMove(1, 1)
+          ).to.be.revertedWithCustomError(cardBattle, "CardBattle__NotPlayer");
+        });
+        it("Should not make move - not in battle", async () => {
+          await expect(
+            cardBattle.connect(player3).makeMove(1, 1)
+          ).to.be.revertedWithCustomError(
+            cardBattle,
+            "CardBattle__NotInBattle"
+          );
+        });
+        it("Should not make move - not in this battle", async () => {
+          await cardBattle
+            .connect(player3)
+            .mintCharacter({ value: characterPrice });
+          player3_characterId = await cardBattle.getLastMintedChar();
+          await cardBattle.connect(player3).pickCharacter(player3_characterId);
+          await cardBattle.connect(player3).playGame();
+          await expect(
+            cardBattle.connect(player3).makeMove(1, 1)
+          ).to.be.revertedWithCustomError(
+            cardBattle,
+            "CardBattle__NotInThisBattle"
+          );
+        });
+        it("Should not make move - choice cannot be No", async () => {
+          await expect(
+            cardBattle.connect(player1).makeMove(1, 0)
+          ).to.be.revertedWithCustomError(
+            cardBattle,
+            "CardBattle__CannotChoiceNo"
+          );
+        });
+        it("Should make move - event MadeMove", async () => {
+          await expect(cardBattle.connect(player1).makeMove(1, 1)).to.emit(
+            cardBattle,
+            "MadeMove"
+          );
+        });
+
+        it("Player2 make move should trigger updateGame", async () => {
+          await cardBattle.connect(player2).makeMove(1, 1);
+          expect((await cardBattle.getBattle(1)).moves[1]).to.emit(
+            cardBattle,
+            "UpdatedGame"
+          );
+        });
+
+        //test moves [1,1]
+        it("Should update players' data - moves: [1,1]", async () => {
+          const player_1 = await cardBattle.getPlayer(player1.address);
+          const player_2 = await cardBattle.getPlayer(player2.address);
+          const player_1_health_before = player_1.health;
+          const player_2_health_before = player_2.health;
+          console.log("aa", player_1_health_before);
+          console.log("bb", player_2_health_before);
+          expect(player_1.health).to.equal(10 - player_2.battleAttack);
+          expect(player_2.health).to.equal(10 - player_1.battleAttack);
+        });
+
+        //test moves [1,2]
+        // it("Should update players' data - moves: [1,2]", async () => {
+        //   let player_1 = await cardBattle.getPlayer(player1.address);
+        //   let player_2 = await cardBattle.getPlayer(player2.address);
+        //   const player_1_health_before = player_1.health;
+        //   const player_2_health_before = player_2.health;
+        //   await cardBattle.connect(player1).makeMove(1, 1);
+        //   await cardBattle.connect(player2).makeMove(1, 2);
+        //   player_1 = await cardBattle.getPlayer(player1.address);
+        //   player_2 = await cardBattle.getPlayer(player2.address);
+        //   const player_1_health_after = player_1.health;
+        //   const player_2_health_after = player_2.health;
+        //   console.log("aa", player_1_health_before);
+        //   console.log("bb", player_2_health_before);
+        //   console.log("cc", player_1_health_after);
+        //   console.log("dd", player_2_health_after);
+        //   expect(player_1.health).to.equal(player_1_health_before);
+        //   expect(player_2.health).to.equal(
+        //     player_2_health_before -
+        //       player_1.battleAttack +
+        //       player_2.battleDefense
+        //   );
+        // });
+
+        //test move [2,1]
+        // it("Should update players' data - moves: [2,1]", async () => {
+        //   let player_1 = await cardBattle.getPlayer(player1.address);
+        //   let player_2 = await cardBattle.getPlayer(player2.address);
+        //   const player_1_health_before = player_1.health;
+        //   const player_2_health_before = player_2.health;
+        //   await cardBattle.connect(player1).makeMove(1, 2);
+        //   await cardBattle.connect(player2).makeMove(1, 1);
+        //   player_1 = await cardBattle.getPlayer(player1.address);
+        //   player_2 = await cardBattle.getPlayer(player2.address);
+        //   const player_1_health_after = player_1.health;
+        //   const player_2_health_after = player_2.health;
+        //   console.log("aa", player_1_health_before);
+        //   console.log("bb", player_2_health_before);
+        //   console.log("cc", player_1_health_after);
+        //   console.log("dd", player_2_health_after);
+        //   expect(player_1.health).to.equal(
+        //     player_1_health_before -
+        //       player_2.battleAttack +
+        //       player_1.battleDefense
+        //   );
+        //   expect(player_2.health).to.equal(player_2_health_before);
+        // });
+
+        //test move [2,2]
+        it("Should update players' data - moves: [2,2]", async () => {
+          let player_1 = await cardBattle.getPlayer(player1.address);
+          let player_2 = await cardBattle.getPlayer(player2.address);
+          const player_1_health_before = player_1.health;
+          const player_2_health_before = player_2.health;
+          await cardBattle.connect(player1).makeMove(1, 2);
+          await cardBattle.connect(player2).makeMove(1, 2);
+          player_1 = await cardBattle.getPlayer(player1.address);
+          player_2 = await cardBattle.getPlayer(player2.address);
+          const player_1_health_after = player_1.health;
+          const player_2_health_after = player_2.health;
+          console.log("aa", player_1_health_before);
+          console.log("bb", player_2_health_before);
+          console.log("cc", player_1_health_after);
+          console.log("dd", player_2_health_after);
+          expect(player_1.health).to.equal(player_1_health_before);
+          expect(player_2.health).to.equal(player_2_health_before);
         });
       });
     });
