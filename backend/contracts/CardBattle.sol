@@ -99,6 +99,7 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
     error CardBattle__NotInThisBattle();
     error CardBattle__StatusNotCorrect();
     error CardBattle__CannotChoiceNo();
+    error CardBattle__MadeMoveAlready();
     error CardBattle__SentOwnerFailed();
 
     modifier isNotPlayer() {
@@ -280,6 +281,9 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
             revert CardBattle__CannotChoiceNo();
         }
         uint8 battleMoveId = players[msg.sender].battleMoveId;
+        if (battles[battleId].moves[battleMoveId] != Choice.NO){
+            revert CardBattle__MadeMoveAlready();
+        }
         battles[battleId].moves[battleMoveId] = choice;
         if (battles[battleId].moves[0] != Choice.NO && battles[battleId].moves[1] != Choice.NO) {
             _updateGame(battleId);

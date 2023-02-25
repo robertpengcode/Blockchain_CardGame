@@ -415,7 +415,14 @@ const { developmentChains } = require("../helper-hardhat-config");
             "MadeMove"
           );
         });
-
+        it("Should not make move - made move already", async () => {
+          await expect(
+            cardBattle.connect(player1).makeMove(1, 2)
+          ).to.be.revertedWithCustomError(
+            cardBattle,
+            "CardBattle__MadeMoveAlready"
+          );
+        });
         it("Player2 make move should trigger updateGame", async () => {
           await cardBattle.connect(player2).makeMove(1, 1);
           expect((await cardBattle.getBattle(1)).moves[1]).to.emit(
