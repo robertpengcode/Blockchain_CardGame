@@ -30,6 +30,8 @@ const ETHERSCAN_API_KEY =
   process.env.ETHERSCAN_API_KEY || "Your etherscan API key";
 const POLYGONSCAN_API_KEY =
   process.env.POLYGONSCAN_API_KEY || "Your polygonscan API key";
+const FUJI_SNOWTRACE_API_KEY =
+  process.env.FUJI_SNOWTRACE_API_KEY || "Your polygonscan API key";
 const REPORT_GAS = process.env.REPORT_GAS || false;
 
 module.exports = {
@@ -74,6 +76,7 @@ module.exports = {
     apiKey: {
       goerli: ETHERSCAN_API_KEY,
       polygon: POLYGONSCAN_API_KEY,
+      fuji: FUJI_SNOWTRACE_API_KEY,
     },
   },
   gasReporter: {

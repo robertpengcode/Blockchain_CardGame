@@ -78,8 +78,7 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
     event PickedCharacter(address indexed player, uint256 tokenId, uint256 time);
     event UsedBerserk(address indexed player, uint256 tokenId, uint256 time);
     event UsedForceShield(address indexed player, uint256 tokenId, uint256 time);
-    event InitiatedBattle(address indexed player, uint256 indexed battleId, uint256 time);
-    event StartedBattle(uint256 indexed battleId, address indexed player1, address indexed player2, uint256 time);
+    event StartedBattle(address indexed player1, address indexed player2, uint256 indexed battleId, uint8 playerIdx, uint256 time);
     event MadeMove(uint256 indexed battleId, address indexed player, Choice choice);
     event UpdatedGame(uint256 indexed battleId, address player1, address player2, uint256 time);
     event EndedBattle(uint256 indexed battleId, address indexed winner, uint256 time);
@@ -92,8 +91,6 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
     error CardBattle__OwnNoCharacter();
     error CardBattle__OwnNoSuchTreasure();
     error CardBattle__RequireCharacterToPlay();
-    error CardBattle__NeedToJoinBattles();
-    error CardBattle__NeedToInitiateBattle();
     error CardBattle__InBattleAlready();
     error CardBattle__NotInBattle();
     error CardBattle__NotInThisBattle();
@@ -213,20 +210,9 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
     }
 
     function playGame() external playerOnly notInBattle{
-        if (waitingBattleId == 0) {
-            _initiateBattle();
-        } else {
-            _joinBattle();
-        }
-    }
-
-    function _initiateBattle() internal playerOnly notInBattle{
         // if (players[msg.sender].battleTimes <= 0) {
         //     revert CardBattle__NeedToBuyBattles();
         // }
-        if (waitingBattleId != 0) {
-            revert CardBattle__NeedToJoinBattles();
-        }
         //players[msg.sender].battleTimes--;
         uint256 characterId = players[msg.sender].battleTokens[0];
         if (characterId == 0) {
@@ -236,41 +222,26 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
         uint256 treasureId2 = players[msg.sender].battleTokens[2];
         players[msg.sender].battleAttack = tokens[characterId].attack + tokens[treasureId1].attack;
         players[msg.sender].battleDefense = tokens[characterId].defense + tokens[treasureId2].defense;
-        players[msg.sender].battleMoveId = 0;
         players[msg.sender].health = 10;
         players[msg.sender].energy = 10;
         players[msg.sender].isInBattle = true;
-        uint256 battleId = nextBattleId;
-        nextBattleId++;
-        battles[battleId].playerAddrs[0] = msg.sender;
-        waitingBattleId = battleId;
-        
-        emit InitiatedBattle(msg.sender, battleId, block.timestamp);
-    }
 
-    function _joinBattle() internal playerOnly notInBattle{
-        // if (players[msg.sender].battleTimes <= 0) {
-        //     revert CardBattle__NeedToBuyBattles();
-        // }
         if (waitingBattleId == 0) {
-            revert CardBattle__NeedToInitiateBattle();
+            players[msg.sender].battleMoveId = 0;
+            uint256 battleId = nextBattleId;
+            nextBattleId++;
+            battles[battleId].playerAddrs[0] = msg.sender;
+            waitingBattleId = battleId;
+            emit StartedBattle(msg.sender, address(0), battleId, 0, block.timestamp);
+        } else {
+            players[msg.sender].battleMoveId = 1;
+            uint256 battleId = waitingBattleId;
+            address player1 = battles[battleId].playerAddrs[0];
+            delete waitingBattleId;
+            battles[battleId].playerAddrs[1] = msg.sender;
+            battles[battleId].battleStatus = BattleStatus.STARTED;
+            emit StartedBattle(player1, msg.sender, battleId, 1, block.timestamp);
         }
-        uint256 battleId = waitingBattleId;
-        address player1 = battles[battleId].playerAddrs[0];
-        delete waitingBattleId;
-        //players[msg.sender].battleTimes--;
-        uint256 characterId = players[msg.sender].battleTokens[0];
-        uint256 treasureId1 = players[msg.sender].battleTokens[1];
-        uint256 treasureId2 = players[msg.sender].battleTokens[2];
-        players[msg.sender].battleAttack = tokens[characterId].attack + tokens[treasureId1].attack;
-        players[msg.sender].battleDefense = tokens[characterId].defense + tokens[treasureId2].defense;
-        players[msg.sender].battleMoveId = 1;
-        players[msg.sender].health = 10;
-        players[msg.sender].energy = 10;
-        players[msg.sender].isInBattle = true;
-        battles[battleId].playerAddrs[1] = msg.sender;
-        battles[battleId].battleStatus = BattleStatus.STARTED;
-        emit StartedBattle(battleId, player1, msg.sender, block.timestamp);
     }
 
     function makeMove(uint256 battleId, Choice choice) external playerOnly inBattle inThisBattle(battleId){
@@ -415,6 +386,18 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
         emit WithdrewByOwner(msg.sender, balance, block.timestamp);
     }
 
+    function deletePlayer(address playerAddr) external onlyOwner {
+        delete players[playerAddr];
+    }
+
+    function deleteBattle(uint256 battleId) external onlyOwner {
+        delete battles[battleId];
+    }
+
+    function isPlayer(address playerAddr) public view returns (bool) {
+        return players[playerAddr].playerAddr != address(0);
+    }
+
     function getToken(uint256 tokenId) external view returns (Token memory){
         return tokens[tokenId];
     }
@@ -449,5 +432,9 @@ contract CardBattle is ERC1155Holder, Ownable, ReentrancyGuard {
 
     function getLastMintedChar() external view returns(uint256) {
         return lastMintedChar;
+    }
+
+    function getPlayerBattleTokens(address playerAddr) external view returns(uint256[3] memory) {
+        return players[playerAddr].battleTokens;
     }
 }

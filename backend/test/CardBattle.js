@@ -306,10 +306,10 @@ const { developmentChains } = require("../helper-hardhat-config");
             cardBattle.connect(player3).playGame()
           ).to.be.revertedWithCustomError(cardBattle, "CardBattle__NotPlayer");
         });
-        it("Should play (initiate battle) - event InitiatedBattle", async () => {
+        it("Should play (initiate battle) - event StartedBattle", async () => {
           await expect(cardBattle.connect(player1).playGame()).to.emit(
             cardBattle,
-            "InitiatedBattle"
+            "StartedBattle"
           );
         });
         it("Should set up battleId & nextBattleId", async () => {
