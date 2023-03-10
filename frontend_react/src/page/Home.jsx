@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { CustomButton, PageHOC } from '../components';
@@ -7,9 +7,9 @@ import styles from '../styles';
 import Alert from '../components/Alert';
 
 const Home = () => {
-  const { contract, walletAddress, gameData, setShowAlert, setErrorMessage, connectWallet, isPlayer ,showAlert, updateEvent, setUpdateEvent} = useGlobalContext();
+  const { contract, walletAddress, setShowAlert, setErrorMessage, connectWallet, isPlayer ,showAlert, updateEvent, setUpdateEvent} = useGlobalContext();
 
-  if(!walletAddress) {console.log('no address!')};
+  //if(!walletAddress) {console.log('no address!')};
 
   const convertAddress = (addr) => {
     return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);

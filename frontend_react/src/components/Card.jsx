@@ -2,7 +2,7 @@ import React from 'react';
 import Tilt from 'react-parallax-tilt';
 import styles from '../styles';
 
-const Card = ({ card, charImg, charName, restStyles, cardRef, playerTwo, attack, defense }) => (
+const Card = ({ card, charImg, charName, restStyles, cardRef, attack, defense }) => (
   <Tilt>
     <div ref={cardRef} className={`${styles.cardContainer} ${restStyles}`}>
       <img src={card} alt="game card" className={styles.cardImg} />

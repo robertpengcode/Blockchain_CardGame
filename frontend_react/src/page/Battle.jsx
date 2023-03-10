@@ -23,7 +23,7 @@ import question from '../assets/util/question.png';
 import { playAudio } from '../utils/animation.js';
 
 const Battle = () => {
-  const { contract, gameData, battleGround, setBattleGround, walletAddress, setErrorMessage, showAlert, setShowAlert, player1Ref, player2Ref, updateMove, updateEvent, setUpdateEvent } = useGlobalContext();
+  const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage, showAlert, setShowAlert, player1Ref, player2Ref, updateMove, updateEvent, setUpdateEvent } = useGlobalContext();
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [health1, setHealth1] = useState(0);
@@ -41,10 +41,7 @@ const Battle = () => {
   const [isBattleEnded, setIsBattleEnded] = useState(false);
   const [winner, setWinner] = useState("");
   const { battleId } = useParams();
-  const noOne = "0x0000000000000000000000000000000000000000"
-  //console.log('winner', winner);
-  //console.log('player1',player1);
-  //console.log('end',isBattleEnded);
+  const noOne = "0x0000000000000000000000000000000000000000";
   const navigate = useNavigate();
   
 const charactersObj = {
@@ -59,11 +56,10 @@ const charactersObj = {
 
   useEffect(() => {
     const getBattleInfo = async () => {
+      //console.log('calling update battle info?');
       if(contract) {
         try {
           const {playerAddrs, winner, battleStatus, moves} = await contract.getBattle(battleId);
-          //console.log('winner',winner);
-          //console.log('battleStatus', battleStatus);
           setPlayer1(playerAddrs[0]);
           setPlayer2(playerAddrs[1]);
           setMadeMove1(Number(moves[0]>0));
@@ -120,6 +116,15 @@ const charactersObj = {
     } 
   }, [battleGround]);
 
+  let bgClass = 'bg-siteblack';
+  if (battleGround === "forest") {
+    bgClass = 'bg-forest';
+  } else if (battleGround === "castle") {
+    bgClass = 'bg-castle';
+  } else {
+    bgClass = 'bg-throneroom';
+  }
+
   const round = player1 && energy1? (12 - energy1)/2 : null;
 
   const convertAddress = (addr) => {
@@ -165,7 +170,7 @@ const charactersObj = {
       case 7:
         charImg = Steve;
         break;
-      case 0:
+      default:
         charImg = question;  
     }
     return charImg;
@@ -187,7 +192,7 @@ const charactersObj = {
         type: 'info',
         message: `Initiating ${choice === 1 ? 'attack' : 'defense'}`,
       });
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[3500]);
+      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
       return () => clearTimeout(timer);
     } catch (error) {
       console.log(error);
@@ -203,10 +208,9 @@ const charactersObj = {
 
   const isPlayer1Won = !isBattleEnded? "" : winner === player1? "Won" : winner === noOne ? "Tied" : "Lost";
   const isPlayer2Won = !isBattleEnded? "" : winner === player2? "Won" : winner === noOne ? "Tied" : "Lost";
-  //console.log('chichi', isPlayer1Won, isPlayer2Won);
 
   return (
-    <div className={`${styles.flexCenter} ${styles.gameContainer} bg-${battleGround}`}>
+    <div className={`${styles.flexCenter} ${styles.gameContainer} ${bgClass}`}>
        {showAlert?.status && <Alert type={showAlert.type} message={showAlert.message} />}
      <div className='flex flex-row w-screen justify-evenly'>
         <div className="flex flex-col">
@@ -222,7 +226,7 @@ const charactersObj = {
                 defense={defense1}
                 restStyles="mt-3"
               />
-              {player1.toLowerCase() !== walletAddress.toLowerCase() || isBattleEnded? null :
+              {player1.toLowerCase() !== walletAddress.toLowerCase() || isBattleEnded || player2 === noOne? null :
                 <div className="flex flex-row mt-4">
                 <ActionButton
                   imgUrl={attack}
@@ -280,7 +284,7 @@ const charactersObj = {
                 defense={defense2}
                 restStyles="mt-3"
               />
-              {player2.toLowerCase() !== walletAddress.toLowerCase() || isBattleEnded? null :
+              {player2.toLowerCase() !== walletAddress.toLowerCase() || isBattleEnded || madeMove2 ? null :
                <div className="flex flex-row mt-4">
                 <ActionButton
                   imgUrl={attack}

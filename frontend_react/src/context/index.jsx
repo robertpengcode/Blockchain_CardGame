@@ -49,7 +49,6 @@ export const GlobalContextProvider = ({ children }) => {
 
   //* Activate event listeners for the smart contract
   useEffect(() => {
-    console.log('updateEvent', updateEvent);
     if (contract) {
       createEventListeners({
         navigate,
@@ -61,6 +60,7 @@ export const GlobalContextProvider = ({ children }) => {
         updateTokens,
         setUpdateTokens,
         setDisableStartBTN,
+        updateMove,
         setUpdateMove,
       });
     }
@@ -68,7 +68,6 @@ export const GlobalContextProvider = ({ children }) => {
 
   //* Handle alerts
   useEffect(() => {
-    console.log("alert", showAlert)
     if (showAlert?.status) {
       const timer = setTimeout(() => {
         setShowAlert({ status: false, type: 'info', message: '' });

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ethers } from "ethers";
 
 import styles from '../styles';
@@ -22,15 +21,6 @@ const CreateBattle = () => {
   const [useBerserk, setUseBerserk] = useState(false);
   const [useForceShield, setUseForceShield] = useState(false);
   const [showBattlePlayer, setShowBattlePlayer] = useState(""); //toDo in the future - need to move this to context
-  const navigate = useNavigate();
-
-  // if (charactersArr) {
-  //   console.log('characterArr', charactersArr);
-  //   console.log('charOptionsArr', charOptionsArr);
-  // }
-  //console.log('charOptionValue', charOption);
-  //console.log(useBerserk, useForceShield);
-  console.log('battleGround', battleGround);
 
   const convertAddress = (addr) => {
     return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);
@@ -73,7 +63,7 @@ const handleBattlePlayer = () => {
 }
 
 useEffect(()=>{
-  console.log('anybody called updateToken?')
+  //console.log('calling updateToken?')
   const getPlayerTokens = async () => {
     const _playerTokens = [];
     try {
@@ -85,7 +75,7 @@ useEffect(()=>{
       console.log('err',error);
       setErrorMessage(error);
     }
-    console.log(_playerTokens);
+    //console.log(_playerTokens);
     setPlayerTokens(_playerTokens);
     convert(_playerTokens);
   }
@@ -93,7 +83,6 @@ useEffect(()=>{
 },[contract, updateTokens]);
 
   const handleMintCharacter = async () => {
-    console.log("click mint character");
     const characterPrice = ethers.parseEther("0.001");
     try {
       await contract.mintCharacter({value: characterPrice, gasLimit: 100000});
@@ -102,8 +91,7 @@ useEffect(()=>{
         type: 'info',
         message: `Mint request submitted!`,
       });
-      console.log("??")
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[3500]);
+      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
       return () => clearTimeout(timer);
     } catch(error) {
       console.log('err', error);
@@ -112,7 +100,6 @@ useEffect(()=>{
   }
 
   const handleMintTreasures = async (treasureId, treasureQuantity) => {
-    console.log("click mint treasures");
     const treasurePrice = 0.0002;
     const _value = ethers.parseEther((treasurePrice * treasureQuantity).toString());
     try {
@@ -123,7 +110,7 @@ useEffect(()=>{
         message: `Mint request submitted!`,
       });
       console.log("??")
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[3500]);
+      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
       return () => clearTimeout(timer);
     } catch(error) {
       console.log(error);
@@ -132,7 +119,6 @@ useEffect(()=>{
   }
 
   const handleSubmit = async () => {
-    console.log('character submit!', charOption, useBerserk, useForceShield);
     handleBattlePlayer();
     try {
       await contract.pickCharacter(charOption);
@@ -147,11 +133,10 @@ useEffect(()=>{
         type: 'info',
         message: `Character & treasures submitted!`,
       });
-      console.log("??")
       setCharOption(0);
       setUseBerserk(false);
       setUseForceShield(false);
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[3500]);
+      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
       return () => clearTimeout(timer);
     } catch(error) {
       console.log(error);
@@ -160,10 +145,8 @@ useEffect(()=>{
   }
 
   const handleBattleGround = (e) => {
-    const bg = e.target.value
-    //const bg = `bg-${e.target.value}`;
-    console.log('bg',bg);
-    setBattleGround(bg)
+    const bg = e.target.value;
+    setBattleGround(bg);
     localStorage.setItem('battleground', bg);
   };
 
@@ -171,13 +154,12 @@ useEffect(()=>{
     console.log("click start battle");
     try {
       await contract.playGame();
-      //setWaitBattle(true);
       setShowAlert({
         status: true,
         type: 'info',
         message: `Start battle submitted!`,
       });
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[3500]);
+      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
       return () => clearTimeout(timer);
     } catch (error) {
       console.log(error);
@@ -218,7 +200,7 @@ useEffect(()=>{
       <div className="flex flex-row">
         <p className={styles.infoText}>Characters You ({showWalletAddress}) Own : {charactersArr.join(", ")}</p>
         {charactersArr.length === 0 ? <img src={InfoIcon} alt="info icon"
-         title="It's required to own at least one character to play. Please wait 10 secs for updating the amount after you mint it." className="ml-1"/> : null}
+         title="It's required to own at least one character to play. Please wait 20 secs for updating the list after you mint it." className="ml-1"/> : null}
       </div>
       <div className="flex flex-row">
         <p className={styles.infoText}>Berserk: {playerTokens[8]}</p>
@@ -252,9 +234,7 @@ useEffect(()=>{
       {charOptionsArr? charOptionsArr.map((char, id)=> <option key={id} value={char.tokenId} className="font-play">{char.name}</option>): null}
     </select>
       </div>
-    {/* <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-    </div> */}
+   
     {playerTokens[8]>0?          
     <label htmlFor="berserk" className={styles.label}>
       Use Berserk? (Optional) Yes <input type="checkbox" name="berserk" id="berserk" checked={useBerserk} onChange={() => {
