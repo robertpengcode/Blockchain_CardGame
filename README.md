@@ -2,15 +2,19 @@
 
 Connect:
 
-![App](image/connect.png)
+<img src='image/connect.png' width='400'>
 
 Register Player:
 
-![App](image/register.png)
+<img src='image/register.png' width='400'>
+
+Play Game:
+
+<img src='image/play.png' width='400'>
 
 Mint Game Character and Treasures:
 
-![App](imgage/mint.png)
+<img src='image/mint.png' width='700'>
 
 Player1 is waiting for Player2:
 
@@ -28,6 +32,6 @@ Player1 defenses:
 
 ![App](image/defense.png)
 
-Game Over:
+Game Over - Player2 won:
 
-![App](image/final.png)
+![App](image/winner.png)
