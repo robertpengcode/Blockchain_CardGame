@@ -1,37 +1,58 @@
+# Yan Kingdom - Web3 Multiplayer NFT Card Battle Game
+
+Mint your character and treasure (ERC1155) tokens to play.
+
+## Tooling used
+
+### Backend:
+
+- Development environment: Hardhat
+- Language: JavaScript/ NodeJs
+- Blockchain: Avalanche Fuji Testnet
+- Token Standard: ERC1155 using OpenZeppelin
+- Smart Contract: Solidity
+
+### Frontend:
+
+- JavaScript Library: React
+- Styling: Tailwind CSS
+- Interacting with the Ethereum Blockchain and its ecosystem: Ethers.js
+- Accessing Ethereum: Metamask Browser Wallet
+
 ## React Frontend
 
-Connect:
+### 1. Connect to Wallet:
 
 <img src='image/connect.png' width='400'>
 
-Register Player:
+### 2. Register as a Player:
 
 <img src='image/register.png' width='400'>
 
-Play Game:
+### 3. Play Game:
 
 <img src='image/play.png' width='400'>
 
-Mint Game Character and Treasures:
+### 4. Mint Game Character and Treasures:
 
 <img src='image/mint.png' width='700'>
 
-Player1 is waiting for Player2:
+### 5. Player1 is waiting for Player2:
 
 ![App](image/player1.png)
 
-Player2 joined the battle:
+### 6. Player2 joined the battle:
 
 ![App](image/player2.png)
 
-Player2 attacks:
+### 7. Player2 attacks:
 
 ![App](image/attack.png)
 
-Player1 defenses:
+### 8. Player1 defenses:
 
 ![App](image/defense.png)
 
-Game Over - Player2 won:
+### 9. Game Over - Player2 won:
 
 ![App](image/winner.png)
