@@ -45,7 +45,7 @@ export const GlobalContextProvider = ({ children }) => {
 
   useEffect(() => {
     window?.ethereum?.on('accountsChanged', (accounts) => updateAddress(accounts));
-  }, []);
+  });
 
   //* Activate event listeners for the smart contract
   useEffect(() => {
@@ -64,7 +64,7 @@ export const GlobalContextProvider = ({ children }) => {
         setUpdateMove,
       });
     }
-  }, [updateEvent]);
+  }, [contract, updateEvent]);
 
   //* Handle alerts
   useEffect(() => {

@@ -23,7 +23,7 @@ import question from '../assets/util/question.png';
 import { playAudio } from '../utils/animation.js';
 
 const Battle = () => {
-  const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage, showAlert, setShowAlert, player1Ref, player2Ref, updateMove, updateEvent, setUpdateEvent } = useGlobalContext();
+  const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage, showAlert, setShowAlert, player1Ref, player2Ref, updateEvent, setUpdateEvent } = useGlobalContext();
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [health1, setHealth1] = useState(0);
@@ -75,7 +75,7 @@ const charactersObj = {
       }
     }
     getBattleInfo()
-  },[contract, updateMove])
+  })
 
   async function getPlayer1Info(addr) {
     if(addr) {
@@ -114,7 +114,7 @@ const charactersObj = {
     if (bg) {
       setBattleGround(bg);
     } 
-  }, [battleGround]);
+  });
 
   let bgClass = 'bg-siteblack';
   if (battleGround === "forest") {

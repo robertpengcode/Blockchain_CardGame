@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ethers } from "ethers";
 
 import styles from '../styles';
@@ -27,28 +27,15 @@ const CreateBattle = () => {
   };
   const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
 
-const charactersObj = {
-  1: {name: "Jeff", attack: 8, defense: 2, tokenId: 1},
-  2: {name: "Charlie", attack: 7, defense: 3, tokenId: 2},
-  3: {name: "Henley", attack: 7, defense: 3, tokenId: 3},
-  4: {name: "Jack", attack: 6, defense: 4, tokenId: 4},
-  5: {name: "Bob", attack: 6, defense: 4, tokenId: 5},
-  6: {name: "Sophie", attack: 5, defense: 5, tokenId: 6},
-  7: {name: "Steve", attack: 5, defense: 5, tokenId: 7}
-}
-
-const convert = (playerTokens) => {
-  const charactersArr = [];
-  const charOptionsArr = [{name: "--choose a character--", tokenId: 0}];
-  for (let i = 1; i <= 7; i++) {
-    if (Number(playerTokens[i]) > 0) {
-      charactersArr.push(`${charactersObj[i].name} (Attack:${charactersObj[i].attack}, Defense:${charactersObj[i].defense})`);
-      charOptionsArr.push({name: charactersObj[i].name, tokenId: charactersObj[i].tokenId});
-    }
-  }
-  setCharactersArr(charactersArr);
-  setCharOptionsArr(charOptionsArr);
-}
+  const charactersObj = useMemo(()=> {return {
+    1: {name: "Jeff", attack: 8, defense: 2, tokenId: 1},
+    2: {name: "Charlie", attack: 7, defense: 3, tokenId: 2},
+    3: {name: "Henley", attack: 7, defense: 3, tokenId: 3},
+    4: {name: "Jack", attack: 6, defense: 4, tokenId: 4},
+    5: {name: "Bob", attack: 6, defense: 4, tokenId: 5},
+    6: {name: "Sophie", attack: 5, defense: 5, tokenId: 6},
+    7: {name: "Steve", attack: 5, defense: 5, tokenId: 7}
+  }},[]);
 
 const battleGroundsArr = ["--choose a battle ground--", "castle", "forest", "throneroom"];
 
@@ -64,6 +51,19 @@ const handleBattlePlayer = () => {
 
 useEffect(()=>{
   //console.log('calling updateToken?')
+  const convert = (playerTokens) => {
+    const charactersArr = [];
+    const charOptionsArr = [{name: "--choose a character--", tokenId: 0}];
+    for (let i = 1; i <= 7; i++) {
+      if (Number(playerTokens[i]) > 0) {
+        charactersArr.push(`${charactersObj[i].name} (Attack:${charactersObj[i].attack}, Defense:${charactersObj[i].defense})`);
+        charOptionsArr.push({name: charactersObj[i].name, tokenId: charactersObj[i].tokenId});
+      }
+    }
+    setCharactersArr(charactersArr);
+    setCharOptionsArr(charOptionsArr);
+  }
+
   const getPlayerTokens = async () => {
     const _playerTokens = [];
     try {
@@ -80,7 +80,7 @@ useEffect(()=>{
     convert(_playerTokens);
   }
   if (contract && walletAddress) getPlayerTokens();
-},[contract, updateTokens]);
+},[contract, updateTokens, setErrorMessage, walletAddress, charactersObj]);
 
   const handleMintCharacter = async () => {
     const characterPrice = ethers.parseEther("0.001");
@@ -109,7 +109,7 @@ useEffect(()=>{
         type: 'info',
         message: `Mint request submitted!`,
       });
-      console.log("??")
+      //console.log("??")
       const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
       return () => clearTimeout(timer);
     } catch(error) {
@@ -151,7 +151,7 @@ useEffect(()=>{
   };
 
   const handleStartBattle = async () => {
-    console.log("click start battle");
+    //console.log("click start battle");
     try {
       await contract.playGame();
       setShowAlert({

@@ -2,7 +2,7 @@
 
 Mint your character and treasure (ERC1155) tokens to play.
 
-## Tooling used
+## Tech Stacks and Tools Used
 
 ### Backend:
 
