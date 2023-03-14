@@ -64,7 +64,7 @@ export const GlobalContextProvider = ({ children }) => {
         setUpdateMove,
       });
     }
-  }, [contract, updateEvent]);
+  }, [contract, updateEvent, navigate, provider, updateMove, updateTokens, walletAddress]);
 
   //* Handle alerts
   useEffect(() => {
