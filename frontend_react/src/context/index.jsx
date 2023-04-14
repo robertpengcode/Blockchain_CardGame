@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { useNavigate } from 'react-router-dom';
 import { ABI, ADDRESS } from '../contract';
-import { createEventListeners } from './createEventListeners';
 
 const GlobalContext = createContext();
 
@@ -11,15 +9,13 @@ export const GlobalContextProvider = ({ children }) => {
   const [battleGround, setBattleGround] = useState('');
   const [contract, setContract] = useState(null);
   const [provider, setProvider] = useState(null);
-  const [isPlayer, setIsPlayer] = useState(false);
+  const [isPlayer, setIsPlayer] = useState(null);
   const [showAlert, setShowAlert] = useState({ status: false, type: 'info', message: '' });
   const [errorMessage, setErrorMessage] = useState('');
   const [updateEvent, setUpdateEvent] = useState(false);
   const [updateTokens, setUpdateTokens] = useState(false);
   const [disableStartBTN, setDisableStartBTN] = useState(true);
   const [updateMove, setUpdateMove] = useState(false);
-
-  const navigate = useNavigate();
 
   //* Set the wallet address to the state
   const updateAddress = async (accounts) => {
@@ -47,31 +43,12 @@ export const GlobalContextProvider = ({ children }) => {
     window?.ethereum?.on('accountsChanged', (accounts) => updateAddress(accounts));
   });
 
-  //* Activate event listeners for the smart contract
-  useEffect(() => {
-    if (contract) {
-      createEventListeners({
-        navigate,
-        contract,
-        provider,
-        walletAddress,
-        setShowAlert,
-        setIsPlayer,
-        updateTokens,
-        setUpdateTokens,
-        setDisableStartBTN,
-        updateMove,
-        setUpdateMove,
-      });
-    }
-  }, [contract, updateEvent, navigate, provider, updateMove, updateTokens, walletAddress]);
-
   //* Handle alerts
   useEffect(() => {
     if (showAlert?.status) {
       const timer = setTimeout(() => {
         setShowAlert({ status: false, type: 'info', message: '' });
-      }, [2500]);
+      }, [4000]);
       return () => clearTimeout(timer);
     }
   }, [showAlert]);
@@ -138,6 +115,7 @@ export const GlobalContextProvider = ({ children }) => {
       value={{
         battleGround,
         setBattleGround,
+        provider,
         contract,
         walletAddress,
         showAlert,
@@ -146,6 +124,7 @@ export const GlobalContextProvider = ({ children }) => {
         setErrorMessage,
         connectWallet,
         isPlayer,
+        setIsPlayer,
         updateEvent,
         setUpdateEvent,
         updateTokens,

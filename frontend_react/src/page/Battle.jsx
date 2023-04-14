@@ -1,10 +1,9 @@
 /* eslint-disable prefer-destructuring */
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
 import styles from '../styles';
-import { ActionButton, Alert, Card, PlayerInfo } from '../components';
 import { useGlobalContext } from '../context';
+import { ActionButton, Alert, Card, PlayerInfo } from '../components';
 import attackSound from '../assets/sounds/attack.wav';
 import defenseSound from '../assets/sounds/defense.mp3';
 import attack from '../assets/util/attack.png';
@@ -23,7 +22,8 @@ import question from '../assets/util/question.png';
 import { playAudio } from '../utils/animation.js';
 
 const Battle = () => {
-  const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage, showAlert, setShowAlert, player1Ref, player2Ref, updateEvent, setUpdateEvent } = useGlobalContext();
+  const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage,
+     showAlert, setShowAlert, player1Ref, player2Ref, updateMove, setUpdateMove} = useGlobalContext();
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [health1, setHealth1] = useState(0);
@@ -41,22 +41,23 @@ const Battle = () => {
   const [isBattleEnded, setIsBattleEnded] = useState(false);
   const [winner, setWinner] = useState("");
   const { battleId } = useParams();
-  const noOne = "0x0000000000000000000000000000000000000000";
-  const navigate = useNavigate();
   
-const charactersObj = {
-  1: {name: "Jeff", attack: 8, defense: 2, tokenId: 1},
-  2: {name: "Charlie", attack: 7, defense: 3, tokenId: 2},
-  3: {name: "Henley", attack: 7, defense: 3, tokenId: 3},
-  4: {name: "Jack", attack: 6, defense: 4, tokenId: 4},
-  5: {name: "Bob", attack: 6, defense: 4, tokenId: 5},
-  6: {name: "Sophie", attack: 5, defense: 5, tokenId: 6},
-  7: {name: "Steve", attack: 5, defense: 5, tokenId: 7}
-}
+  const navigate = useNavigate();
+
+  const noOne = "0x0000000000000000000000000000000000000000";
+  
+  const charactersObj = {
+    1: {name: "Jeff", attack: 8, defense: 2, tokenId: 1},
+    2: {name: "Charlie", attack: 7, defense: 3, tokenId: 2},
+    3: {name: "Henley", attack: 7, defense: 3, tokenId: 3},
+    4: {name: "Jack", attack: 6, defense: 4, tokenId: 4},
+    5: {name: "Bob", attack: 6, defense: 4, tokenId: 5},
+    6: {name: "Sophie", attack: 5, defense: 5, tokenId: 6},
+    7: {name: "Steve", attack: 5, defense: 5, tokenId: 7}
+  }
 
   useEffect(() => {
     const getBattleInfo = async () => {
-      //console.log('calling update battle info?');
       if(contract) {
         try {
           const {playerAddrs, winner, battleStatus, moves} = await contract.getBattle(battleId);
@@ -76,6 +77,13 @@ const charactersObj = {
     }
     getBattleInfo()
   })
+
+  useEffect(() => {
+    const bg = localStorage.getItem('battleground');
+    if (bg) {
+      setBattleGround(bg);
+    } 
+  });
 
   async function getPlayer1Info(addr) {
     if(addr) {
@@ -109,13 +117,6 @@ const charactersObj = {
     }
   }
   
-  useEffect(() => {
-    const bg = localStorage.getItem('battleground');
-    if (bg) {
-      setBattleGround(bg);
-    } 
-  });
-
   let bgClass = 'bg-siteblack';
   if (battleGround === "forest") {
     bgClass = 'bg-forest';
@@ -186,14 +187,27 @@ const charactersObj = {
   const makeAMove = async (choice) => {
     playAudio(choice === 1 ? attackSound : defenseSound);
     try {
-      await contract.makeMove(battleId, choice, { gasLimit: 200000 });
-      setShowAlert({
-        status: true,
-        type: 'info',
-        message: `Initiating ${choice === 1 ? 'attack' : 'defense'}`,
+      const answer = await contract.makeMove(battleId, choice, { gasLimit: 200000 });
+      if (answer) {
+        setShowAlert({
+          status: true,
+          type: 'info',
+          message: `Initiating ${choice === 1 ? 'attack' : 'defense'}. Please wait a few seconds for the confirmation.`,
+        });
+      }
+
+      contract.on("MadeMove", (battleId, player, choice) => {
+        setShowAlert({
+          status: true,
+          type: "success",
+          message: "A move has been successfully made.",
+        });
+
+        const timer = setTimeout(() => {
+          setUpdateMove(!updateMove);
+        }, [500]);
+        return () => clearTimeout(timer);
       });
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
-      return () => clearTimeout(timer);
     } catch (error) {
       console.log(error);
       setErrorMessage(error);

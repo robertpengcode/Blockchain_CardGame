@@ -19,6 +19,9 @@ const GOERLI_RPC_URL =
 const POLYGON_MAINNET_RPC_URL =
   process.env.POLYGON_MAINNET_RPC_URL ||
   "https://polygon-mainnet.alchemyapi.io/v2/your-api-key";
+const ALCHEMY_MUMBAI_RPC_URL =
+  process.env.ALCHEMY_MUMBAI_RPC_URL ||
+  "https://polygon-mumbai.g.alchemy.com/v2/your-api-key";
 const FUJI_RPC_URL =
   process.env.FUJI_RPC_URL || "https://api.avax-test.network/ext/bc/C/rpc";
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x";
@@ -64,6 +67,12 @@ module.exports = {
       accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
       saveDeployments: true,
       chainId: 137,
+    },
+    polygonMumbai: {
+      url: ALCHEMY_MUMBAI_RPC_URL,
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      saveDeployments: true,
+      chainId: 80001,
     },
     fuji: {
       url: FUJI_RPC_URL,

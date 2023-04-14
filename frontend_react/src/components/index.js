@@ -5,6 +5,9 @@ import PlayerInfo from "./PlayerInfo";
 import CustomInput from "./CustomInput";
 import CustomButton from "./CustomButton";
 import ActionButton from "./ActionButton";
+import RegisterBTN from "./RegisterBTN";
+import PlayGameBTN from "./PlayGameBTN";
+import ConnectBTN from "./ConnectBTN";
 
 export {
   Card,
@@ -14,4 +17,7 @@ export {
   CustomInput,
   CustomButton,
   ActionButton,
+  RegisterBTN,
+  PlayGameBTN,
+  ConnectBTN,
 };

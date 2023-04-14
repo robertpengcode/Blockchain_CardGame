@@ -1,34 +1,40 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-
-import { CustomButton, PageHOC } from '../components';
 import { useGlobalContext } from '../context';
-import styles from '../styles';
+import { PageHOC, RegisterBTN, PlayGameBTN, ConnectBTN } from '../components';
 import Alert from '../components/Alert';
 
 const Home = () => {
-  const { contract, walletAddress, setShowAlert, setErrorMessage, connectWallet, isPlayer ,showAlert, updateEvent, setUpdateEvent} = useGlobalContext();
-
-  //if(!walletAddress) {console.log('no address!')};
+  const { contract, walletAddress, setShowAlert, setErrorMessage, connectWallet, isPlayer ,showAlert, setIsPlayer} = useGlobalContext();
+  const navigate = useNavigate();
 
   const convertAddress = (addr) => {
     return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);
   };
   const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
 
-  const navigate = useNavigate();
   const handleRegisterPlayer = async () => {
     try {
       const playerExists = await contract.isPlayer(walletAddress);
       if (!playerExists) {
-        await contract.registerPlayer();
-        setShowAlert({
-          status: true,
-          type: 'info',
-          message: `Register ${showWalletAddress} request submitted!`,
+        const answer = await contract.registerPlayer();
+        if (answer) {
+          setShowAlert({
+            status: true,
+            type: 'info',
+            message: `Register ${showWalletAddress} request submitted! Please wait a few seconds for the confirmation.`,
+          });
+        }
+        contract.on("RegisteredPlayer", (player) => {
+          setShowAlert({
+            status: true,
+            type: "success",
+            message: `Collection (${convertAddress(
+              player
+            )}) is registered.`,
+          });
+          setIsPlayer(true);
         });
-        const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[3500]);
-        return () => clearTimeout(timer);
       }
     } catch (error) {
       console.log('err',error);
@@ -41,44 +47,16 @@ const Home = () => {
   };
   const handlePlayGame = () => {navigate('/create-battle')};
 
-  const connect = <div className="flex flex-col">
-    <CustomButton
-      title="Connect To Wallet"
-      handleClick={handleConnectWallet}
-      restStyles="mt-6"
-    />  
-  </div>
-
-  const playgame = <div className="flex flex-col">
-    <p className={styles.normalText}>{showWalletAddress} registered!</p>
-    <CustomButton
-      title="Play Game"
-      handleClick={handlePlayGame}
-      restStyles="mt-6"
-    />  
-  </div>
-
-  const register = <div className="flex flex-col">
-  <p className={styles.normalText}>{showWalletAddress} connected!</p>
-  <CustomButton
-    title="Register To Play"
-    handleClick={handleRegisterPlayer}
-    restStyles="mt-6"
-  /> 
-  </div>
-
-  let button;
-  if (isPlayer) {
-    button = playgame;
-  } else if (walletAddress) {
-    button = register;
-  } else {
-    button = connect;
-  }
-
   return (
-    <>{showAlert?.status && <Alert type={showAlert.type} message={showAlert.message} />}
-    {button}</>
+    <>
+    {showAlert?.status && <Alert type={showAlert.type} message={showAlert.message} />}
+    
+    {isPlayer? <PlayGameBTN handlePlayGame={handlePlayGame} showWalletAddress={showWalletAddress}/>
+     : 
+      walletAddress? <RegisterBTN handleRegisterPlayer={handleRegisterPlayer} showWalletAddress={showWalletAddress}/>
+      : <ConnectBTN handleConnectWallet={handleConnectWallet}/>
+     }
+    </>
   );
 };
 
@@ -92,3 +70,14 @@ export default PageHOC(
   Game
   </>,
 );
+
+  // const RegisteredPlayerEventFilter =
+  //   contract.filters.RegisteredPlayer(walletAddress);
+  // AddNewEvent(RegisteredPlayerEventFilter, contract, () => {
+  //   setIsPlayer(true);
+  //   setShowAlert({
+  //     status: true,
+  //     type: "success",
+  //     message: "Player has been successfully registered",
+  //   });
+  // });

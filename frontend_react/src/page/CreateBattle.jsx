@@ -1,31 +1,29 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ethers } from "ethers";
-
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles';
 import { useGlobalContext } from '../context';
+import { ethers } from "ethers";
 import { CustomButton, PageHOC } from '../components';
 import Alert from '../components/Alert';
 import InfoIcon from '../assets/util/infoIcon.svg';
 
 const CreateBattle = () => {
   const { contract, setErrorMessage, walletAddress, showAlert, setShowAlert,
-    setUpdateEvent, updateEvent, updateTokens, disableStartBTN, battleGround, setBattleGround} = useGlobalContext();
+    updateTokens, setUpdateTokens, disableStartBTN,
+     battleGround, setBattleGround, setDisableStartBTN} = useGlobalContext();
   
   const [playerTokens, setPlayerTokens] = useState([]);
-  //toDo in the future - meant one treasue a time for now
-  //const [treasureId, setTreasureId] = useState(0);
-  //const [treasureQuantity, setTreasureQuantity] = useState(0);
   const [charactersArr, setCharactersArr] = useState([]);
   const [charOptionsArr, setCharOptionsArr] = useState([]);
   const [charOption, setCharOption] = useState(0);
   const [useBerserk, setUseBerserk] = useState(false);
   const [useForceShield, setUseForceShield] = useState(false);
   const [showBattlePlayer, setShowBattlePlayer] = useState(""); //toDo in the future - need to move this to context
+    //toDo in the future - meant one treasue a time for now
+  //const [treasureId, setTreasureId] = useState(0);
+  //const [treasureQuantity, setTreasureQuantity] = useState(0);
 
-  const convertAddress = (addr) => {
-    return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);
-  };
-  const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
+  const navigate = useNavigate();
 
   const charactersObj = useMemo(()=> {return {
     1: {name: "Jeff", attack: 8, defense: 2, tokenId: 1},
@@ -37,6 +35,42 @@ const CreateBattle = () => {
     7: {name: "Steve", attack: 5, defense: 5, tokenId: 7}
   }},[]);
 
+  useEffect(()=>{
+    const convert = (playerTokens) => {
+      const charactersArr = [];
+      const charOptionsArr = [{name: "--choose a character--", tokenId: 0}];
+      for (let i = 1; i <= 7; i++) {
+        if (Number(playerTokens[i]) > 0) {
+          charactersArr.push(`${charactersObj[i].name} (Attack:${charactersObj[i].attack}, Defense:${charactersObj[i].defense})`);
+          charOptionsArr.push({name: charactersObj[i].name, tokenId: charactersObj[i].tokenId});
+        }
+      }
+      setCharactersArr(charactersArr);
+      setCharOptionsArr(charOptionsArr);
+    }
+  
+    const getPlayerTokens = async () => {
+      const _playerTokens = [];
+      try {
+        for (let i = 0; i <= 9; i++ ) {
+          const amount = await contract.getOwnedTokenAmount(walletAddress, i);
+          _playerTokens.push(amount.toString());
+        }
+      } catch (error) {
+        console.log('err',error);
+        setErrorMessage(error);
+      }
+      setPlayerTokens(_playerTokens);
+      convert(_playerTokens);
+    }
+    if (contract && walletAddress) getPlayerTokens();
+  },[contract, updateTokens, setErrorMessage, walletAddress, charactersObj]);
+
+  const convertAddress = (addr) => {
+    return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);
+  };
+  const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
+
 const battleGroundsArr = ["--choose a battle ground--", "castle", "forest", "throneroom"];
 
 const handleBattlePlayer = () => {
@@ -44,55 +78,29 @@ const handleBattlePlayer = () => {
     const berserk = useBerserk? " + Berserk" : "";
     const forceShield = useForceShield? " + ForceShield" : "";
     const _showBattlePlayer = charactersObj[charOption].name + berserk + forceShield;
-    //console.log('big', _showBattlePlayer);
     setShowBattlePlayer(_showBattlePlayer);
   }
 }
 
-useEffect(()=>{
-  //console.log('calling updateToken?')
-  const convert = (playerTokens) => {
-    const charactersArr = [];
-    const charOptionsArr = [{name: "--choose a character--", tokenId: 0}];
-    for (let i = 1; i <= 7; i++) {
-      if (Number(playerTokens[i]) > 0) {
-        charactersArr.push(`${charactersObj[i].name} (Attack:${charactersObj[i].attack}, Defense:${charactersObj[i].defense})`);
-        charOptionsArr.push({name: charactersObj[i].name, tokenId: charactersObj[i].tokenId});
-      }
-    }
-    setCharactersArr(charactersArr);
-    setCharOptionsArr(charOptionsArr);
-  }
-
-  const getPlayerTokens = async () => {
-    const _playerTokens = [];
-    try {
-      for (let i = 0; i <= 9; i++ ) {
-        const amount = await contract.getOwnedTokenAmount(walletAddress, i);
-        _playerTokens.push(amount.toString());
-      }
-    } catch (error) {
-      console.log('err',error);
-      setErrorMessage(error);
-    }
-    //console.log(_playerTokens);
-    setPlayerTokens(_playerTokens);
-    convert(_playerTokens);
-  }
-  if (contract && walletAddress) getPlayerTokens();
-},[contract, updateTokens, setErrorMessage, walletAddress, charactersObj]);
-
   const handleMintCharacter = async () => {
     const characterPrice = ethers.parseEther("0.001");
     try {
-      await contract.mintCharacter({value: characterPrice, gasLimit: 100000});
-      setShowAlert({
-        status: true,
-        type: 'info',
-        message: `Mint request submitted!`,
+      const answer = await contract.mintCharacter({value: characterPrice, gasLimit: 1000000});
+      if (answer) {
+        setShowAlert({
+          status: true,
+          type: 'info',
+          message: `Mint request submitted! Please wait a few seconds for the confirmation.`,
+        });
+      }
+      contract.on("MintedCharacter", (player) => {
+        setShowAlert({
+          status: true,
+          type: "success",
+          message: "Character has been successfully minted",
+        });
+        setUpdateTokens(!updateTokens);
       });
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
-      return () => clearTimeout(timer);
     } catch(error) {
       console.log('err', error);
       setErrorMessage(error);
@@ -103,15 +111,22 @@ useEffect(()=>{
     const treasurePrice = 0.0002;
     const _value = ethers.parseEther((treasurePrice * treasureQuantity).toString());
     try {
-      await contract.mintTreasure(treasureId, treasureQuantity, {value: _value});
-      setShowAlert({
-        status: true,
-        type: 'info',
-        message: `Mint request submitted!`,
+      const answer = await contract.mintTreasure(treasureId, treasureQuantity, {value: _value});
+      if (answer) {
+        setShowAlert({
+          status: true,
+          type: 'info',
+          message: `Mint request submitted! Please wait a few seconds for the confirmation.`,
+        });
+      }
+      contract.on("MintedTreasure", (player) => {
+        setShowAlert({
+          status: true,
+          type: "success",
+          message: "Treasure has been successfully minted",
+        });
+        setUpdateTokens(!updateTokens);
       });
-      //console.log("??")
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
-      return () => clearTimeout(timer);
     } catch(error) {
       console.log(error);
       setErrorMessage(error);
@@ -131,13 +146,20 @@ useEffect(()=>{
       setShowAlert({
         status: true,
         type: 'info',
-        message: `Character & treasures submitted!`,
+        message: `Character & treasures submitted! Please wait a few seconds for the confirmation.`,
       });
       setCharOption(0);
       setUseBerserk(false);
       setUseForceShield(false);
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
-      return () => clearTimeout(timer);
+      contract.on("PickedCharacter", (player) => {
+        setShowAlert({
+          status: true,
+          type: "success",
+          message: "Character has been successfully selected",
+        });
+        setUpdateTokens(!updateTokens);
+      });
+      setDisableStartBTN(false);
     } catch(error) {
       console.log(error);
       setErrorMessage(error);
@@ -151,16 +173,26 @@ useEffect(()=>{
   };
 
   const handleStartBattle = async () => {
-    //console.log("click start battle");
     try {
-      await contract.playGame();
-      setShowAlert({
-        status: true,
-        type: 'info',
-        message: `Start battle submitted!`,
+      const answer = await contract.playGame();
+      if (answer) {
+        setShowAlert({
+          status: true,
+          type: 'info',
+          message: `Start battle submitted! Please wait a few seconds for the confirmation.`,
+        });
+      }
+      contract.on("StartedBattle", (player1, player2, battleId) => {
+        setShowAlert({
+          status: true,
+          type: "success",
+          message: "A new battle has been successfully started. You will be redirected in 3 Secs",
+        });
+        const timer = setTimeout(() => {
+        navigate(`/Battle/${battleId}`);
+        }, [3000]);
+        return () => clearTimeout(timer);
       });
-      const timer = setTimeout(()=>{setUpdateEvent(!updateEvent);},[4000]);
-      return () => clearTimeout(timer);
     } catch (error) {
       console.log(error);
       setErrorMessage(error);
@@ -169,7 +201,7 @@ useEffect(()=>{
 
   const mintCharacterBTN = (
     <CustomButton
-          title="Mint Character (0.01 AVAX)"
+          title="Mint Character (0.001 MATIC)"
           handleClick={handleMintCharacter}
           restStyles="mt-6"
         />
@@ -177,7 +209,7 @@ useEffect(()=>{
 
   const mintBerserkBTN = (
     <CustomButton
-          title="Mint Berserk (0.002 AVAX)"
+          title="Mint Berserk (0.0002 MATIC)"
           handleClick={()=>{handleMintTreasures(8,1)}}
           restStyles="mt-6"
         />
@@ -185,7 +217,7 @@ useEffect(()=>{
 
   const mintForceShieldBTN = (
     <CustomButton
-          title="Mint Force Shield (0.002 AVAX)"
+          title="Mint Force Shield (0.002 MATIC)"
           handleClick={()=>{handleMintTreasures(9,1)}}
           restStyles="mt-6"
         />
