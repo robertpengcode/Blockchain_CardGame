@@ -1,7 +1,6 @@
 import React from 'react';
-
-import AlertIcon from '../assets/AlertIcon.jsx';
 import styles from '../styles';
+import AlertIcon from '../assets/AlertIcon.jsx';
 
 const Alert = ({ type, message }) => (
   <div className={`${styles.alertContainer} ${styles.flexCenter}`}>

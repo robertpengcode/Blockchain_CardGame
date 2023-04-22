@@ -4,8 +4,7 @@ import dead from '../assets/util/dead.png';
 import neutral from '../assets/util/neutral.png';
 
 const healthPoints = 10;
-const noOne = "0x000...0000"
-
+const noOne = "0x000...0000";
 const healthLevel = (points) => (points >= 7 ? 'bg-green-500' : points >= 3 ? 'bg-orange-500' : 'bg-red-500');
 const marginIndexing = (index) => (index !== healthPoints - 1 ? 'mr-1' : 'mr-0');
 

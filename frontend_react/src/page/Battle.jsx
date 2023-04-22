@@ -1,4 +1,3 @@
-/* eslint-disable prefer-destructuring */
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from '../styles';
@@ -22,8 +21,8 @@ import question from '../assets/util/question.png';
 import { playAudio } from '../utils/animation.js';
 
 const Battle = () => {
-  const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage,
-     showAlert, setShowAlert, player1Ref, player2Ref, updateMove, setUpdateMove} = useGlobalContext();
+  const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage, showAlert, setShowAlert,
+    player1Ref, player2Ref, updateMove, setUpdateMove, convertAddress, charactersObj} = useGlobalContext();
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [health1, setHealth1] = useState(0);
@@ -45,16 +44,6 @@ const Battle = () => {
   const navigate = useNavigate();
 
   const noOne = "0x0000000000000000000000000000000000000000";
-  
-  const charactersObj = {
-    1: {name: "Jeff", attack: 8, defense: 2, tokenId: 1},
-    2: {name: "Charlie", attack: 7, defense: 3, tokenId: 2},
-    3: {name: "Henley", attack: 7, defense: 3, tokenId: 3},
-    4: {name: "Jack", attack: 6, defense: 4, tokenId: 4},
-    5: {name: "Bob", attack: 6, defense: 4, tokenId: 5},
-    6: {name: "Sophie", attack: 5, defense: 5, tokenId: 6},
-    7: {name: "Steve", attack: 5, defense: 5, tokenId: 7}
-  }
 
   useEffect(() => {
     const getBattleInfo = async () => {
@@ -128,9 +117,6 @@ const Battle = () => {
 
   const round = player1 && energy1? (12 - energy1)/2 : null;
 
-  const convertAddress = (addr) => {
-    return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);
-  };
   const showPlayer1Addr = player1 ? convertAddress(player1) : "";
   const showPlayer2Addr = player2 ? convertAddress(player2) : "";
 
@@ -313,7 +299,6 @@ const Battle = () => {
                   titleText="Defense!"
                 />
               </div>}
-              
             </div>
           </div>
         </div>

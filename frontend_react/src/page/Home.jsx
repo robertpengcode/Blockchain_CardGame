@@ -5,12 +5,10 @@ import { PageHOC, RegisterBTN, PlayGameBTN, ConnectBTN } from '../components';
 import Alert from '../components/Alert';
 
 const Home = () => {
-  const { contract, walletAddress, setShowAlert, setErrorMessage, connectWallet, isPlayer ,showAlert, setIsPlayer} = useGlobalContext();
+  const { contract, walletAddress, setShowAlert, setErrorMessage, connectWallet, isPlayer,
+     showAlert, setIsPlayer, convertAddress} = useGlobalContext();
   const navigate = useNavigate();
 
-  const convertAddress = (addr) => {
-    return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);
-  };
   const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
 
   const handleRegisterPlayer = async () => {
@@ -45,6 +43,7 @@ const Home = () => {
   const handleConnectWallet = async () => {
     await connectWallet();
   };
+
   const handlePlayGame = () => {navigate('/create-battle')};
 
   return (
@@ -70,14 +69,3 @@ export default PageHOC(
   Game
   </>,
 );
-
-  // const RegisteredPlayerEventFilter =
-  //   contract.filters.RegisteredPlayer(walletAddress);
-  // AddNewEvent(RegisteredPlayerEventFilter, contract, () => {
-  //   setIsPlayer(true);
-  //   setShowAlert({
-  //     status: true,
-  //     type: "success",
-  //     message: "Player has been successfully registered",
-  //   });
-  // });

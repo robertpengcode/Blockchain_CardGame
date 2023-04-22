@@ -18,7 +18,7 @@
   background: #52c0e5;
   margin-right: 12px;
 }
-
+/* 
 .battle-card {
   position: relative;
   transition: 0.4s ease-out;
@@ -31,9 +31,9 @@
 
 .battle-card:hover .info {
   opacity: 1;
-}
+} */
 
-.battle-card:before {
+/* .battle-card:before {
   content: "";
   position: absolute;
   top: 0;
@@ -54,8 +54,8 @@
   color: #fff;
   opacity: 0;
   transition: 0.5s;
-}
-
+} */
+/* 
 .gameload {
   background: rgba(127, 70, 240, 0.15);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
@@ -63,20 +63,20 @@
   -webkit-backdrop-filter: blur(3px);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-}
+} */
 
 body {
   overflow: hidden; /* Hide scrollbars */
 }
 
 /* Battle Animation Effect */
-.container {
+/* .container {
   position: absolute;
   width: 20rem;
   height: 20rem;
   transform: translate(-50%, -50%);
   pointer-events: none;
-}
+} */
 
 /* .container:before {
   content: "";
@@ -95,7 +95,7 @@ body {
 .container:nth-child(7n):before {
   display: none;
 } */
-
+/* 
 .particle {
   position: absolute;
   display: block;
@@ -107,8 +107,8 @@ body {
 .particle:nth-child(1) .sparcle {
   -webkit-animation-delay: 0ms;
   animation-delay: 0ms;
-}
-.particle:nth-child(2) .sparcle {
+} */
+/* .particle:nth-child(2) .sparcle {
   -webkit-animation-delay: 50ms;
   animation-delay: 50ms;
 }
@@ -202,8 +202,8 @@ body {
   -webkit-animation: explode 333ms;
   animation: explode 333ms;
   box-shadow: 0 0 0 0 #fde655;
-}
-
+} */
+/* 
 @-webkit-keyframes explode {
   0% {
     background-color: #e4f9fa;
@@ -260,4 +260,4 @@ body {
     box-shadow: 0 0 0 0 #7a2c1f;
     transform: rotate(45deg) scale(0.25) translateZ(0);
   }
-}
+} */

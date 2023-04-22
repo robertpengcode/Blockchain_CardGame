@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles';
 import { useGlobalContext } from '../context';
@@ -10,7 +10,7 @@ import InfoIcon from '../assets/util/infoIcon.svg';
 const CreateBattle = () => {
   const { contract, setErrorMessage, walletAddress, showAlert, setShowAlert,
     updateTokens, setUpdateTokens, disableStartBTN,
-     battleGround, setBattleGround, setDisableStartBTN} = useGlobalContext();
+     battleGround, setBattleGround, setDisableStartBTN, convertAddress, charactersObj} = useGlobalContext();
   
   const [playerTokens, setPlayerTokens] = useState([]);
   const [charactersArr, setCharactersArr] = useState([]);
@@ -19,21 +19,15 @@ const CreateBattle = () => {
   const [useBerserk, setUseBerserk] = useState(false);
   const [useForceShield, setUseForceShield] = useState(false);
   const [showBattlePlayer, setShowBattlePlayer] = useState(""); //toDo in the future - need to move this to context
-    //toDo in the future - meant one treasue a time for now
+  //toDo in the future - meant one treasue a time for now
   //const [treasureId, setTreasureId] = useState(0);
   //const [treasureQuantity, setTreasureQuantity] = useState(0);
 
   const navigate = useNavigate();
 
-  const charactersObj = useMemo(()=> {return {
-    1: {name: "Jeff", attack: 8, defense: 2, tokenId: 1},
-    2: {name: "Charlie", attack: 7, defense: 3, tokenId: 2},
-    3: {name: "Henley", attack: 7, defense: 3, tokenId: 3},
-    4: {name: "Jack", attack: 6, defense: 4, tokenId: 4},
-    5: {name: "Bob", attack: 6, defense: 4, tokenId: 5},
-    6: {name: "Sophie", attack: 5, defense: 5, tokenId: 6},
-    7: {name: "Steve", attack: 5, defense: 5, tokenId: 7}
-  }},[]);
+  const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
+
+  const battleGroundsArr = ["--choose a battle ground--", "castle", "forest", "throneroom"];
 
   useEffect(()=>{
     const convert = (playerTokens) => {
@@ -66,12 +60,7 @@ const CreateBattle = () => {
     if (contract && walletAddress) getPlayerTokens();
   },[contract, updateTokens, setErrorMessage, walletAddress, charactersObj]);
 
-  const convertAddress = (addr) => {
-    return addr.slice(0, 5) + "..." + addr.slice(addr.length - 4);
-  };
-  const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
-
-const battleGroundsArr = ["--choose a battle ground--", "castle", "forest", "throneroom"];
+  
 
 const handleBattlePlayer = () => {
   if (charOption > 0 ) {
@@ -311,7 +300,6 @@ const handleBattlePlayer = () => {
           isDisabled={disableStartBTN}
           />
         </div>
-
       </div>
     </>
   );
