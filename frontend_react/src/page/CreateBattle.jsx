@@ -168,7 +168,7 @@ const CreateBattle = () => {
 
   const handleStartBattle = async () => {
     try {
-      const answer = await contract.connect(signer).playGame();
+      const answer = await contract.connect(signer).playGame({gasLimit: 1000000});
       if (answer) {
         setShowAlert({
           status: true,
