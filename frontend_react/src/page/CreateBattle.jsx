@@ -10,7 +10,7 @@ import InfoIcon from '../assets/util/infoIcon.svg';
 const CreateBattle = () => {
   const { contract, setErrorMessage, walletAddress, showAlert, setShowAlert,
     updateTokens, setUpdateTokens, disableStartBTN,
-     battleGround, setBattleGround, setDisableStartBTN, convertAddress, charactersObj} = useGlobalContext();
+     battleGround, setBattleGround, setDisableStartBTN, convertAddress, charactersObj, signer} = useGlobalContext();
   
   const [playerTokens, setPlayerTokens] = useState([]);
   const [charactersArr, setCharactersArr] = useState([]);
@@ -60,21 +60,20 @@ const CreateBattle = () => {
     if (contract && walletAddress) getPlayerTokens();
   },[contract, updateTokens, setErrorMessage, walletAddress, charactersObj]);
 
-  
-
-const handleBattlePlayer = () => {
-  if (charOption > 0 ) {
-    const berserk = useBerserk? " + Berserk" : "";
-    const forceShield = useForceShield? " + ForceShield" : "";
-    const _showBattlePlayer = charactersObj[charOption].name + berserk + forceShield;
-    setShowBattlePlayer(_showBattlePlayer);
+  const handleBattlePlayer = () => {
+    if (charOption > 0 ) {
+      const berserk = useBerserk? " + Berserk" : "";
+      const forceShield = useForceShield? " + ForceShield" : "";
+      const _showBattlePlayer = charactersObj[charOption].name + berserk + forceShield;
+      setShowBattlePlayer(_showBattlePlayer);
+    }
   }
-}
 
   const handleMintCharacter = async () => {
-    const characterPrice = ethers.parseEther("0.001");
+    const characterPrice = ethers.utils.parseEther("0.001");
     try {
-      const answer = await contract.mintCharacter({value: characterPrice, gasLimit: 1000000});
+      //const answer = await contract.mintCharacter({value: characterPrice, gasLimit: 1000000});
+      const answer = await contract.connect(signer).mintCharacter({value: characterPrice, gasLimit: 1000000});
       if (answer) {
         setShowAlert({
           status: true,
@@ -83,13 +82,16 @@ const handleBattlePlayer = () => {
         });
       }
       contract.on("MintedCharacter", (player) => {
+      //contractForListen.on("MintedCharacter", (player) => {
         setShowAlert({
           status: true,
           type: "success",
           message: "Character has been successfully minted",
         });
         setUpdateTokens(!updateTokens);
+        contract.removeAllListeners("MintedCharacter");
       });
+      
     } catch(error) {
       console.log('err', error);
       setErrorMessage(error);
@@ -98,9 +100,10 @@ const handleBattlePlayer = () => {
 
   const handleMintTreasures = async (treasureId, treasureQuantity) => {
     const treasurePrice = 0.0002;
-    const _value = ethers.parseEther((treasurePrice * treasureQuantity).toString());
+    const _value = ethers.utils.parseEther((treasurePrice * treasureQuantity).toString());
     try {
-      const answer = await contract.mintTreasure(treasureId, treasureQuantity, {value: _value});
+      const answer = await contract.connect(signer).mintTreasure(treasureId, treasureQuantity, {value: _value});
+      //const answer = await contract.mintTreasure(treasureId, treasureQuantity, {value: _value});
       if (answer) {
         setShowAlert({
           status: true,
@@ -115,6 +118,7 @@ const handleBattlePlayer = () => {
           message: "Treasure has been successfully minted",
         });
         setUpdateTokens(!updateTokens);
+        contract.removeAllListeners("MintedTreasure");
       });
     } catch(error) {
       console.log(error);
@@ -125,12 +129,12 @@ const handleBattlePlayer = () => {
   const handleSubmit = async () => {
     handleBattlePlayer();
     try {
-      await contract.pickCharacter(charOption);
+      await contract.connect(signer).pickCharacter(charOption);
       if (useBerserk) {
-        await contract.useBerserk();
+        await contract.connect(signer).useBerserk();
       }
       if (useForceShield) {
-        await contract.useForceShield();
+        await contract.connect(signer).useForceShield();
       }
       setShowAlert({
         status: true,
@@ -147,6 +151,7 @@ const handleBattlePlayer = () => {
           message: "Character has been successfully selected",
         });
         setUpdateTokens(!updateTokens);
+        contract.removeAllListeners("PickedCharacter");
       });
       setDisableStartBTN(false);
     } catch(error) {
@@ -163,7 +168,7 @@ const handleBattlePlayer = () => {
 
   const handleStartBattle = async () => {
     try {
-      const answer = await contract.playGame();
+      const answer = await contract.connect(signer).playGame();
       if (answer) {
         setShowAlert({
           status: true,
@@ -177,6 +182,7 @@ const handleBattlePlayer = () => {
           type: "success",
           message: "A new battle has been successfully started. You will be redirected in 3 Secs",
         });
+        contract.removeAllListeners("StartedBattle");
         const timer = setTimeout(() => {
         navigate(`/Battle/${battleId}`);
         }, [3000]);

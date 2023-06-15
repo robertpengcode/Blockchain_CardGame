@@ -6,7 +6,7 @@ import Alert from '../components/Alert';
 
 const Home = () => {
   const { contract, walletAddress, setShowAlert, setErrorMessage, connectWallet, isPlayer,
-     showAlert, setIsPlayer, convertAddress} = useGlobalContext();
+     showAlert, setIsPlayer, convertAddress, signer} = useGlobalContext();
   const navigate = useNavigate();
 
   const showWalletAddress = walletAddress ? convertAddress(walletAddress) : "";
@@ -15,7 +15,7 @@ const Home = () => {
     try {
       const playerExists = await contract.isPlayer(walletAddress);
       if (!playerExists) {
-        const answer = await contract.registerPlayer();
+        const answer = await contract.connect(signer).registerPlayer();
         if (answer) {
           setShowAlert({
             status: true,
@@ -32,6 +32,7 @@ const Home = () => {
             )}) is registered.`,
           });
           setIsPlayer(true);
+          contract.removeAllListeners("RegisteredPlayer");
         });
       }
     } catch (error) {

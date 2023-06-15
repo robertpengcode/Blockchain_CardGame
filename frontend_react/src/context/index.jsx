@@ -2,13 +2,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { ABI, ADDRESS } from '../contract';
 
+const {REACT_APP_ALCHEMY_MUMBAI_RPC_URL} = process.env;
+
 const GlobalContext = createContext();
 
 export const GlobalContextProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState('');
   const [battleGround, setBattleGround] = useState('');
   const [contract, setContract] = useState(null);
-  const [provider, setProvider] = useState(null);
+  //const [provider, setProvider] = useState(null);
   const [isPlayer, setIsPlayer] = useState(null);
   const [showAlert, setShowAlert] = useState({ status: false, type: 'info', message: '' });
   const [errorMessage, setErrorMessage] = useState('');
@@ -16,41 +18,107 @@ export const GlobalContextProvider = ({ children }) => {
   const [updateTokens, setUpdateTokens] = useState(false);
   const [disableStartBTN, setDisableStartBTN] = useState(true);
   const [updateMove, setUpdateMove] = useState(false);
+  const [signer, setSigner] = useState(null);
 
+  //ethers.js v6
+  // const connectWallet = async () => {
+  //   if (window.ethereum) {
+  //     const newProvider = new ethers.BrowserProvider(window.ethereum);
+  //     const accounts = await newProvider.send("eth_requestAccounts", []);
+  //     setWalletAddress(accounts[0]);
+  //     const signer = await newProvider.getSigner();
+  //     window.localStorage.setItem("connected", accounts[0]);
+  //     const newContract = new ethers.Contract(ADDRESS, ABI, signer);
+  //     setProvider(newProvider);
+  //     setContract(newContract);
+  //     const isPlayer = await newContract.isPlayer(accounts[0]);
+  //     setIsPlayer(isPlayer);
+  //   } else {
+  //       setErrorMessage("Please Install MetaMask!!!");
+  //   }
+  // }
+
+  //ethers.js v5  
   const connectWallet = async () => {
     if (window.ethereum) {
-      const newProvider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await newProvider.send("eth_requestAccounts", []);
+      const alchemyProvider = new ethers.providers.JsonRpcProvider(REACT_APP_ALCHEMY_MUMBAI_RPC_URL);
+      //const newProvider = new ethers.providers.AlchemyProvider('maticmum',ALCHEMY_MUMBAI_API_KEY);
+      //console.log('Alchemy', alchemyProvider);
+      const walletProvider = new ethers.providers.Web3Provider(window.ethereum)
+      //console.log('wallet', walletProvider);
+      const accounts = await walletProvider.send("eth_requestAccounts", []);
+      const signer = walletProvider.getSigner()
+      //console.log('signer', signer);
+      //const signer = new ethers.Wallet(PRIVATE_KEY, newProvider);
       setWalletAddress(accounts[0]);
-      const signer = await newProvider.getSigner();
       window.localStorage.setItem("connected", accounts[0]);
-
-      const newContract = new ethers.Contract(ADDRESS, ABI, signer);
-
-      setProvider(newProvider);
+      //const newContract = new ethers.Contract(ADDRESS, ABI, signer);
+      const newContract = new ethers.Contract(ADDRESS, ABI, alchemyProvider);
+      //console.log('contract', newContract);
       setContract(newContract);
-      
+      setSigner(signer);
       const isPlayer = await newContract.isPlayer(accounts[0]);
       setIsPlayer(isPlayer);
-      
     } else {
-        setErrorMessage("Please Install MetaMask!!!");
+      setErrorMessage("Please Install MetaMask!!!");
     }
   }
 
+  // ethers.js v6
+  // const restore = async () => {
+  //   const newProvider = new ethers.BrowserProvider(window.ethereum);
+  //     const account = window.localStorage.getItem("connected");
+  //     setWalletAddress(account);
+  //     const signer = await newProvider.getSigner();
+  //     const newContract = new ethers.Contract(ADDRESS, ABI, signer);
+  //     setContract(newContract);
+  //     setProvider(newProvider);
+  //     const isPlayer = await newContract.isPlayer(account);
+  //     setIsPlayer(isPlayer);
+  // }
+
+  //ethers.js v5  
   const restore = async () => {
-    const newProvider = new ethers.BrowserProvider(window.ethereum);
-      const account = window.localStorage.getItem("connected");
-      setWalletAddress(account);
-      const signer = await newProvider.getSigner();
-      const newContract = new ethers.Contract(ADDRESS, ABI, signer);
-      setContract(newContract);
-      setProvider(newProvider);
-      const isPlayer = await newContract.isPlayer(account);
-      setIsPlayer(isPlayer);
+    const alchemyProvider = new ethers.providers.JsonRpcProvider(REACT_APP_ALCHEMY_MUMBAI_RPC_URL);
+    //console.log('AlchemyR', alchemyProvider);
+    const walletProvider = new ethers.providers.Web3Provider(window.ethereum)
+    //console.log('walletR', walletProvider);
+    const account = window.localStorage.getItem("connected");
+    setWalletAddress(account);
+    const signer = walletProvider.getSigner()
+    //console.log('signerR', signer);
+    //const newContract = new ethers.Contract(ADDRESS, ABI, signer);
+    const newContract = new ethers.Contract(ADDRESS, ABI, alchemyProvider);
+    //console.log('contractR', newContract);
+    setContract(newContract);
+    setSigner(signer);
+    const isPlayer = await newContract.isPlayer(account);
+    setIsPlayer(isPlayer);
   }
 
   //* Set the wallet address to the state
+  //ethers.js v6
+  // const updateAddress = async (accounts) => {
+  //   if (accounts.length === 0) {
+  //     window.localStorage.removeItem("connected");
+  //     setWalletAddress(null);
+  //     setContract(null);
+  //     setIsPlayer(false);
+  //   } else if (accounts[0] === walletAddress) {
+  //     return;
+  //   } else {
+  //     setWalletAddress(accounts[0]);
+  //     window.localStorage.setItem("connected", accounts[0]);
+  //     const newProvider = new ethers.BrowserProvider(window.ethereum);
+  //     const signer = await newProvider.getSigner();
+  //     const newContract = new ethers.Contract(ADDRESS, ABI, signer);
+  //     setContract(newContract);
+  //     setProvider(newProvider);
+  //     const isPlayer = await newContract.isPlayer(accounts[0]);
+  //     setIsPlayer(isPlayer);
+  //   }
+  // };
+  //ethers.js v5  
   const updateAddress = async (accounts) => {
     if (accounts.length === 0) {
       window.localStorage.removeItem("connected");
@@ -62,11 +130,17 @@ export const GlobalContextProvider = ({ children }) => {
     } else {
       setWalletAddress(accounts[0]);
       window.localStorage.setItem("connected", accounts[0]);
-      const newProvider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await newProvider.getSigner();
-      const newContract = new ethers.Contract(ADDRESS, ABI, signer);
+      const alchemyProvider = new ethers.providers.JsonRpcProvider(REACT_APP_ALCHEMY_MUMBAI_RPC_URL);
+      //console.log('AlchemyU', alchemyProvider);
+      const walletProvider = new ethers.providers.Web3Provider(window.ethereum)
+      //console.log('walletU', walletProvider);
+      const signer = walletProvider.getSigner()
+      //console.log('signerU', signer);
+      //const newContract = new ethers.Contract(ADDRESS, ABI, signer);
+      const newContract = new ethers.Contract(ADDRESS, ABI, alchemyProvider);
+      //console.log('contractU', newContract);
       setContract(newContract);
-      setProvider(newProvider);
+      setSigner(signer);
       const isPlayer = await newContract.isPlayer(accounts[0]);
       setIsPlayer(isPlayer);
     }
@@ -95,7 +169,7 @@ export const GlobalContextProvider = ({ children }) => {
     if (showAlert?.status) {
       const timer = setTimeout(() => {
         setShowAlert({ status: false, type: 'info', message: '' });
-      }, [4000]);
+      }, [2500]);
       return () => clearTimeout(timer);
     }
   }, [showAlert]);
@@ -129,7 +203,6 @@ export const GlobalContextProvider = ({ children }) => {
       value={{
         battleGround,
         setBattleGround,
-        provider,
         contract,
         walletAddress,
         showAlert,
@@ -149,6 +222,7 @@ export const GlobalContextProvider = ({ children }) => {
         setUpdateMove,
         convertAddress,
         charactersObj,
+        signer
       }}
     >
       {children}

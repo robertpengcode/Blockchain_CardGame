@@ -22,7 +22,7 @@ import { playAudio } from '../utils/animation.js';
 
 const Battle = () => {
   const { contract, battleGround, setBattleGround, walletAddress, setErrorMessage, showAlert, setShowAlert,
-    player1Ref, player2Ref, updateMove, setUpdateMove, convertAddress, charactersObj} = useGlobalContext();
+    player1Ref, player2Ref, updateMove, setUpdateMove, convertAddress, charactersObj, signer} = useGlobalContext();
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [health1, setHealth1] = useState(0);
@@ -173,7 +173,7 @@ const Battle = () => {
   const makeAMove = async (choice) => {
     playAudio(choice === 1 ? attackSound : defenseSound);
     try {
-      const answer = await contract.makeMove(battleId, choice, { gasLimit: 200000 });
+      const answer = await contract.connect(signer).makeMove(battleId, choice, { gasLimit: 200000 });
       if (answer) {
         setShowAlert({
           status: true,
@@ -188,10 +188,10 @@ const Battle = () => {
           type: "success",
           message: "A move has been successfully made.",
         });
-
+        contract.removeAllListeners("MadeMove");
         const timer = setTimeout(() => {
           setUpdateMove(!updateMove);
-        }, [500]);
+        }, [300]);
         return () => clearTimeout(timer);
       });
     } catch (error) {
