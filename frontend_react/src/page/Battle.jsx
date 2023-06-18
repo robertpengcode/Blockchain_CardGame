@@ -58,6 +58,9 @@ const Battle = () => {
           setWinner(winner);
           getPlayer1Info(playerAddrs[0]);
           getPlayer2Info(playerAddrs[1]);
+          if (Number(battleStatus)===2) {
+            window.localStorage.removeItem("battleId");
+          }
         } catch (error) {
           console.log(error);
           setErrorMessage(error.message);

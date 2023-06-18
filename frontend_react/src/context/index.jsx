@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { ABI, ADDRESS } from '../contract';
+import { useNavigate } from 'react-router-dom';
 
 const {REACT_APP_ALCHEMY_MUMBAI_RPC_URL} = process.env;
-
 const GlobalContext = createContext();
+
 
 export const GlobalContextProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState('');
@@ -19,6 +20,7 @@ export const GlobalContextProvider = ({ children }) => {
   const [disableStartBTN, setDisableStartBTN] = useState(true);
   const [updateMove, setUpdateMove] = useState(false);
   const [signer, setSigner] = useState(null);
+  const navigate = useNavigate();
 
   //ethers.js v6
   // const connectWallet = async () => {
@@ -197,6 +199,18 @@ export const GlobalContextProvider = ({ children }) => {
       return;
     }
   },[]);
+
+  useEffect(()=>{
+    if(window.ethereum && window.localStorage.getItem("connected") && window.localStorage.getItem("battleId")) {
+      //const playerAddress = window.localStorage.getItem("connected");
+      const battleId = window.localStorage.getItem("battleId");
+      console.log('bd',battleId);
+      navigate(`/battle/${battleId}`);
+    } else {
+      //console.log('no need to do anything');
+      return;
+    }
+  },[navigate]);
 
   return (
     <GlobalContext.Provider

@@ -183,8 +183,9 @@ const CreateBattle = () => {
           message: "A new battle has been successfully started. You will be redirected in 3 Secs",
         });
         contract.removeAllListeners("StartedBattle");
+        window.localStorage.setItem("battleId", battleId);
         const timer = setTimeout(() => {
-        navigate(`/Battle/${battleId}`);
+        navigate(`/battle/${battleId}`);
         }, [3000]);
         return () => clearTimeout(timer);
       });
