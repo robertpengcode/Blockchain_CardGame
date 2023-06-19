@@ -191,7 +191,8 @@ const Battle = () => {
           type: "success",
           message: "A move has been successfully made.",
         });
-        contract.removeAllListeners("MadeMove");
+        console.log('player',player);
+        //contract.removeAllListeners("MadeMove");
         const timer = setTimeout(() => {
           setUpdateMove(!updateMove);
         }, [300]);
