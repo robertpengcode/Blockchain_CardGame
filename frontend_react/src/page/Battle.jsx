@@ -59,6 +59,7 @@ const Battle = () => {
           getPlayer1Info(playerAddrs[0]);
           getPlayer2Info(playerAddrs[1]);
           if (Number(battleStatus)===2) {
+            contract.removeAllListeners();
             window.localStorage.removeItem("battleId");
           }
         } catch (error) {
@@ -186,16 +187,17 @@ const Battle = () => {
       }
 
       contract.on("MadeMove", (battleId, player, choice) => {
-        setShowAlert({
-          status: true,
-          type: "success",
-          message: "A move has been successfully made.",
-        });
         console.log('player',player);
-        //contract.removeAllListeners("MadeMove");
+        if (walletAddress === player) {
+          setShowAlert({
+            status: true,
+            type: "success",
+            message: "A move has been successfully made.",
+          });
+        }
         const timer = setTimeout(() => {
           setUpdateMove(!updateMove);
-        }, [300]);
+        }, [100]);
         return () => clearTimeout(timer);
       });
     } catch (error) {
