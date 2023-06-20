@@ -188,7 +188,7 @@ const Battle = () => {
 
       contract.on("MadeMove", (battleId, player, choice) => {
         console.log('player',player);
-        if (walletAddress === player) {
+        if (walletAddress.toLowerCase() === player.toLowerCase()) {
           setShowAlert({
             status: true,
             type: "success",
