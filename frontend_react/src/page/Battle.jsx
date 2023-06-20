@@ -197,11 +197,18 @@ const Battle = () => {
             type: "success",
             message: "A move has been successfully made.",
           });
-        }
-        const timer = setTimeout(() => {
+          const timer = setTimeout(() => {
+            setUpdateMove(!updateMove);
+          }, [500]);
+          return () => clearTimeout(timer);
+        } else {
+          console.log('the other player is listening...');
           setUpdateMove(!updateMove);
-        }, [1000]);
-        return () => clearTimeout(timer);
+          const timer = setTimeout(() => {
+            setUpdateMove(!updateMove);
+          }, [500]);
+          return () => clearTimeout(timer);
+        }
       });
     } catch (error) {
       console.log(error);
