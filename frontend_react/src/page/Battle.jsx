@@ -58,10 +58,6 @@ const Battle = () => {
           setWinner(winner);
           getPlayer1Info(playerAddrs[0]);
           getPlayer2Info(playerAddrs[1]);
-          if (Number(battleStatus)===2) {
-            contract.removeAllListeners();
-            window.localStorage.removeItem("battleId");
-          }
         } catch (error) {
           console.log(error);
           setErrorMessage(error.message);
@@ -70,6 +66,13 @@ const Battle = () => {
     }
     getBattleInfo()
   })
+
+  useEffect(()=>{
+    if (isBattleEnded) {
+      contract.removeAllListeners();
+      window.localStorage.removeItem("battleId");
+    }
+  },[contract, isBattleEnded]);
 
   useEffect(() => {
     const bg = localStorage.getItem('battleground');
@@ -197,7 +200,7 @@ const Battle = () => {
         }
         const timer = setTimeout(() => {
           setUpdateMove(!updateMove);
-        }, [300]);
+        }, [1000]);
         return () => clearTimeout(timer);
       });
     } catch (error) {
