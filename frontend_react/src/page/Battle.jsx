@@ -39,6 +39,7 @@ const Battle = () => {
   const [madeMove2, setMadeMove2] = useState(false);
   const [isBattleEnded, setIsBattleEnded] = useState(false);
   const [winner, setWinner] = useState("");
+  const [update, setUpdate] = useState(false);
   const { battleId } = useParams();
   
   const navigate = useNavigate();
@@ -203,9 +204,8 @@ const Battle = () => {
           return () => clearTimeout(timer);
         } else {
           console.log('the other player is listening...');
-          setUpdateMove(!updateMove);
           const timer = setTimeout(() => {
-            setUpdateMove(!updateMove);
+            setUpdate(!update);
           }, [500]);
           return () => clearTimeout(timer);
         }
