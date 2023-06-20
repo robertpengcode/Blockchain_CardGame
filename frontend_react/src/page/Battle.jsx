@@ -197,7 +197,7 @@ const Battle = () => {
         }
         const timer = setTimeout(() => {
           setUpdateMove(!updateMove);
-        }, [100]);
+        }, [300]);
         return () => clearTimeout(timer);
       });
     } catch (error) {

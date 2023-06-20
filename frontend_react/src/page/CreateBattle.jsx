@@ -9,8 +9,8 @@ import InfoIcon from '../assets/util/infoIcon.svg';
 
 const CreateBattle = () => {
   const { contract, setErrorMessage, walletAddress, showAlert, setShowAlert,
-    updateTokens, setUpdateTokens, disableStartBTN,
-     battleGround, setBattleGround, setDisableStartBTN, convertAddress, charactersObj, signer} = useGlobalContext();
+    updateTokens, setUpdateTokens, disableStartBTN, battleGround, setBattleGround, setDisableStartBTN,
+     convertAddress, charactersObj, signer, updateMove, setUpdateMove} = useGlobalContext();
   
   const [playerTokens, setPlayerTokens] = useState([]);
   const [charactersArr, setCharactersArr] = useState([]);
@@ -177,17 +177,36 @@ const CreateBattle = () => {
         });
       }
       contract.on("StartedBattle", (player1, player2, battleId) => {
-        setShowAlert({
-          status: true,
-          type: "success",
-          message: "A new battle has been successfully started. You will be redirected in 3 Secs",
-        });
-        contract.removeAllListeners("StartedBattle");
-        window.localStorage.setItem("battleId", battleId);
-        const timer = setTimeout(() => {
-        navigate(`/battle/${battleId}`);
-        }, [3000]);
-        return () => clearTimeout(timer);
+        console.log('p1',player1,'p2',player2);
+        if (walletAddress.toLowerCase() === player1.toLowerCase() && player2.toLowerCase().slice(0,7) === "0x00000") {
+          setShowAlert({
+            status: true,
+            type: "success",
+            message: "A new battle has been successfully started. You will be redirected in 3 Secs",
+          });
+          window.localStorage.setItem("battleId", battleId);
+          const timer = setTimeout(() => {
+            navigate(`/battle/${battleId}`);
+          }, [3000]);
+          return () => clearTimeout(timer);
+        } else if (walletAddress.toLowerCase() === player2.toLowerCase()) {
+          setShowAlert({
+            status: true,
+            type: "success",
+            message: "A new battle has been successfully started. You will be redirected in 3 Secs",
+          });
+          window.localStorage.setItem("battleId", battleId);
+          contract.removeAllListeners("StartedBattle");
+          const timer = setTimeout(() => {
+            navigate(`/battle/${battleId}`);
+          }, [3000]);
+          return () => clearTimeout(timer);
+        } else if (walletAddress.toLowerCase() === player1.toLowerCase() && player2.toLowerCase().slice(0,7) !== "0x00000") {
+          contract.removeAllListeners("StartedBattle");
+          setUpdateMove(!updateMove);
+        } else {
+          console.log('what? why?');
+        }
       });
     } catch (error) {
       console.log(error);
