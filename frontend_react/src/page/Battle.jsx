@@ -191,7 +191,7 @@ const Battle = () => {
       }
 
       contract.on("MadeMove", (battleId, player, choice) => {
-        console.log('player',player);
+        //console.log('player',player);
         if (walletAddress.toLowerCase() === player.toLowerCase()) {
           setShowAlert({
             status: true,
@@ -203,7 +203,7 @@ const Battle = () => {
           }, [500]);
           return () => clearTimeout(timer);
         } else {
-          console.log('the other player is listening...');
+          //console.log('the other player is listening...');
           const timer = setTimeout(() => {
             setUpdate(!update);
           }, [500]);

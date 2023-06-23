@@ -177,7 +177,7 @@ const CreateBattle = () => {
         });
       }
       contract.on("StartedBattle", (player1, player2, battleId) => {
-        console.log('p1',player1,'p2',player2);
+        //console.log('p1',player1,'p2',player2);
         if (walletAddress.toLowerCase() === player1.toLowerCase() && player2.toLowerCase().slice(0,7) === "0x00000") {
           setShowAlert({
             status: true,
@@ -205,7 +205,7 @@ const CreateBattle = () => {
           contract.removeAllListeners("StartedBattle");
           setUpdateMove(!updateMove);
         } else {
-          console.log('what? why?');
+          console.log('error...');
         }
       });
     } catch (error) {
